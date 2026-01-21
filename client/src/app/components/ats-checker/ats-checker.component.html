@@ -1,0 +1,46 @@
+<div class="ats-container">
+    <h2>ATS Score Checker</h2>
+    <div class="checker-layout">
+        <div class="input-section">
+            <div class="form-group">
+                <label>Your Resume Text</label>
+                <textarea [(ngModel)]="resumeText" placeholder="Paste your resume content here..." rows="12"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Job Description</label>
+                <textarea [(ngModel)]="jobDescription" placeholder="Paste the job description here..."
+                    rows="12"></textarea>
+            </div>
+            <button (click)="checkScore()" class="btn-check">Analyze Resume</button>
+        </div>
+
+        <div class="results-section" *ngIf="results">
+            <div class="score-card">
+                <h3>Overall Score</h3>
+                <div class="score-circle">{{results.score}}%</div>
+            </div>
+
+            <div class="details">
+                <h4>Breakdown</h4>
+                <p>Keyword Match: {{results.breakdown.keywordMatch}}%</p>
+                <p>Section Check: {{results.breakdown.sectionMatch}}%</p>
+
+                <h4>Recommendations</h4>
+                <div *ngIf="results.recommendations.missingSections.length > 0">
+                    <p><strong>Missing Sections:</strong></p>
+                    <ul>
+                        <li *ngFor="let s of results.recommendations.missingSections">{{s}}</li>
+                    </ul>
+                </div>
+
+                <div *ngIf="results.recommendations.suggestedKeywords.length > 0">
+                    <p><strong>Add these keywords to improve score:</strong></p>
+                    <div class="keywords">
+                        <span *ngFor="let k of results.recommendations.suggestedKeywords"
+                            class="keyword-tag">{{k}}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
