@@ -1,0 +1,69 @@
+<div class="resume-container">
+    <h2>Resume Creator</h2>
+
+    <div class="template-selector section" *ngIf="!templateSelected">
+        <h3>Step 1: Choose a Template</h3>
+        <div class="templates-grid">
+            <div class="template-card" (click)="selectTemplate('classic')">
+                <div class="template-preview classic"></div>
+                <p>Classic Professional</p>
+            </div>
+            <div class="template-card" (click)="selectTemplate('modern')">
+                <div class="template-preview modern"></div>
+                <p>Modern Creative</p>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="templateSelected">
+        <button (click)="templateSelected = false" class="btn-back">← Change Template</button>
+
+        <div class="user-id-mock">
+            <label>Mock User ID: </label>
+            <input type="number" [(ngModel)]="userId" style="width: 50px; display: inline-block;">
+            <button (click)="loadResume()" class="btn-load">Load Data</button>
+        </div>
+
+        <form (ngSubmit)="save()">
+            <section>
+                <h3>Step 2: Personal Information</h3>
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" name="name" [(ngModel)]="resume.personalInfo.name" placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" [(ngModel)]="resume.personalInfo.email"
+                        placeholder="john@example.com">
+                </div>
+            </section>
+
+            <section>
+                <h3>Step 3: Experience</h3>
+                <div *ngFor="let exp of resume.experience; let i = index" class="entry">
+                    <input type="text" placeholder="Company" [(ngModel)]="exp.company" [name]="'company' + i">
+                    <input type="text" placeholder="Role" [(ngModel)]="exp.role" [name]="'role' + i">
+                    <textarea placeholder="Description" [(ngModel)]="exp.desc" [name]="'desc' + i"></textarea>
+                    <button type="button" (click)="removeExperience(i)" class="btn-remove"
+                        *ngIf="resume.experience.length > 1">Remove</button>
+                </div>
+                <button type="button" (click)="addExperience()" class="btn-add">Add Experience +</button>
+            </section>
+
+            <section>
+                <h3>Step 4: Skills</h3>
+                <p class="hint">Enter skills separated by commas</p>
+                <input type="text" name="skills" [(ngModel)]="skillString" (change)="updateSkills()"
+                    placeholder="Angular, Node.js, MySQL...">
+            </section>
+
+            <div class="actions">
+                <button type="submit" class="btn-save">Save Changes</button>
+                <div class="export-actions">
+                    <button type="button" (click)="downloadPdf()" class="btn-export pdf">Download PDF</button>
+                    <button type="button" (click)="downloadWord()" class="btn-export word">Download Word</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
