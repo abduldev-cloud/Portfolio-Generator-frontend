@@ -1,43 +1,169 @@
-<div class="ats-container">
-    <h2>ATS Score Checker</h2>
-    <div class="checker-layout">
-        <div class="input-section">
-            <div class="form-group">
-                <label>Your Resume Text</label>
-                <textarea [(ngModel)]="resumeText" placeholder="Paste your resume content here..." rows="12"></textarea>
-            </div>
-            <div class="form-group">
-                <label>Job Description</label>
-                <textarea [(ngModel)]="jobDescription" placeholder="Paste the job description here..."
-                    rows="12"></textarea>
-            </div>
-            <button (click)="checkScore()" class="btn-check">Analyze Resume</button>
+<div class="hero-section">
+    <h1 class="glow-text">Intelligence Engine <span class="v-badge">v2.5</span></h1>
+    <p class="subtitle">Next-gen semantic analysis & strategic resume optimization</p>
+</div>
+
+<div class="engine-layout">
+    <!-- Input Stage -->
+    <div class="input-card glass" *ngIf="!analysis">
+        <div class="input-header">
+            <div class="status-dot pulsing"></div>
+            <span>Awaiting Strategic Data</span>
         </div>
 
-        <div class="results-section" *ngIf="results">
-            <div class="score-card">
-                <h3>Overall Score</h3>
-                <div class="score-circle">{{results.score}}%</div>
+        <div class="grid-inputs">
+            <div class="field-group">
+                <label><i class="icon-resume"></i> Target Resume</label>
+                <div class="textarea-wrapper">
+                    <textarea [(ngModel)]="resumeText" placeholder="Paste your career history..." rows="12"></textarea>
+                    <div class="line-accents"></div>
+                </div>
             </div>
 
-            <div class="details">
-                <h4>Breakdown</h4>
-                <p>Keyword Match: {{results.breakdown.keywordMatch}}%</p>
-                <p>Section Check: {{results.breakdown.sectionMatch}}%</p>
+            <div class="field-group">
+                <label><i class="icon-jd"></i> Job Description</label>
+                <div class="textarea-wrapper">
+                    <textarea [(ngModel)]="jobDescription" placeholder="Paste the target role details..."
+                        rows="12"></textarea>
+                    <div class="line-accents"></div>
+                </div>
+            </div>
+        </div>
 
-                <h4>Recommendations</h4>
-                <div *ngIf="results.recommendations.missingSections.length > 0">
-                    <p><strong>Missing Sections:</strong></p>
-                    <ul>
-                        <li *ngFor="let s of results.recommendations.missingSections">{{s}}</li>
+        <div class="action-footer">
+            <button (click)="checkScore()" class="btn-primary-glow" [disabled]="loading">
+                <span *ngIf="!loading">Initialize Deep Analysis</span>
+                <span *ngIf="loading" class="loading-state">
+                    <span class="spinner"></span> Orchestrating Intelligence...
+                </span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Analysis Dashboard -->
+    <div class="analysis-dashboard" *ngIf="analysis">
+        <header class="dashboard-header">
+            <button (click)="reset()" class="btn-back">
+                <span class="arrow">←</span> New Analysis
+            </button>
+            <div class="badge-row">
+                <span class="status-pill green">Analysis Complete</span>
+                <span class="status-pill blue">Gemini 2.5 Logic</span>
+            </div>
+        </header>
+
+        <div class="executive-summary glass">
+            <div class="summary-icon">💡</div>
+            <div class="summary-text">
+                <h3>Strategic Evaluation</h3>
+                <p>{{analysis.executive_summary}}</p>
+            </div>
+        </div>
+
+        <!-- Main Data Grid -->
+        <div class="data-grid">
+            <!-- Score Circle -->
+            <div class="score-card glass glass-hover">
+                <div class="gauge-container">
+                    <svg viewBox="0 0 100 100" class="gauge-svg">
+                        <circle cx="50" cy="50" r="45" class="gauge-track"></circle>
+                        <circle cx="50" cy="50" r="45" class="gauge-fill"
+                            [style.stroke-dashoffset]="283 - (283 * analysis.ats_report.overall_score / 100)"></circle>
+                    </svg>
+                    <div class="gauge-content">
+                        <span class="score-num">{{analysis.ats_report.overall_score}}</span>
+                        <span class="score-label">Match %</span>
+                    </div>
+                </div>
+                <div class="hiring-tag {{analysis.ats_report.hiring_probability_band?.toLowerCase()}}">
+                    Probability: {{analysis.ats_report.hiring_probability_band}}
+                </div>
+            </div>
+
+            <!-- Skill Gap Map -->
+            <div class="gap-card glass glass-hover">
+                <div class="card-title">Critical Skill Alignments</div>
+                <div class="skill-tags">
+                    <span class="skill-tag"
+                        *ngFor="let skill of analysis.skill_gap_analysis?.missing_high_priority_skills">
+                        {{skill}}
+                    </span>
+                </div>
+                <div class="expectations mt-4">
+                    <div class="sub-label">Hidden Recruiter Intent</div>
+                    <ul class="intent-list">
+                        <li *ngFor="let item of analysis.ats_report?.hidden_expectations">{{item}}</li>
                     </ul>
                 </div>
+            </div>
+        </div>
 
-                <div *ngIf="results.recommendations.suggestedKeywords.length > 0">
-                    <p><strong>Add these keywords to improve score:</strong></p>
-                    <div class="keywords">
-                        <span *ngFor="let k of results.recommendations.suggestedKeywords"
-                            class="keyword-tag">{{k}}</span>
+        <!-- Advanced Strategy Tabs -->
+        <div class="strategy-tabs glass">
+            <nav class="tabs-nav">
+                <button [class.active]="activeTab === 'roadmap'" (click)="activeTab = 'roadmap'">Optimization
+                    Plan</button>
+                <button [class.active]="activeTab === 'resume'" (click)="activeTab = 'resume'">Rewritten Resume</button>
+                <button [class.active]="activeTab === 'branding'" (click)="activeTab = 'branding'">Personal
+                    Brand</button>
+            </nav>
+
+            <div class="tab-body">
+                <!-- Roadmap -->
+                <div class="tab-pane animate-fade" *ngIf="activeTab === 'roadmap'">
+                    <div class="roadmap-grid">
+                        <div class="steps">
+                            <h4>Actionable Roadmap</h4>
+                            <div class="step-item"
+                                *ngFor="let step of analysis.optimization_roadmap?.improvement_steps; let i = index">
+                                <span class="step-num">{{i + 1}}</span>
+                                <p>{{step}}</p>
+                            </div>
+                        </div>
+                        <div class="bullets">
+                            <h4>Bullet Point Upgrades</h4>
+                            <div class="bullet-suggestion"
+                                *ngFor="let bullet of analysis.optimization_roadmap?.bullet_suggestions">
+                                {{bullet}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rewritten Resume -->
+                <div class="tab-pane animate-fade" *ngIf="activeTab === 'resume'">
+                    <div class="code-utility-header">
+                        <span>Tailored JSON / PDF Source</span>
+                        <button class="btn-copy-mini" (click)="copyToClipboard(analysis.rewritten_resume)">Copy
+                            Content</button>
+                    </div>
+                    <div class="code-editor">
+                        <pre>{{analysis.rewritten_resume}}</pre>
+                    </div>
+                </div>
+
+                <!-- Branding -->
+                <div class="tab-pane animate-fade" *ngIf="activeTab === 'branding'">
+                    <div class="branding-hero">
+                        <div class="brand-badge">PRO</div>
+                        <h2>{{analysis.branding_strategy?.optimized_headline}}</h2>
+                        <p class="brand-tagline">{{analysis.branding_strategy?.positioning_statement}}</p>
+                    </div>
+                    <div class="suggestions-grid">
+                        <div class="suggest-box">
+                            <label>Ideal Roles</label>
+                            <div class="tags">
+                                <span class="tag-outline"
+                                    *ngFor="let role of analysis.branding_strategy?.ideal_target_roles">{{role}}</span>
+                            </div>
+                        </div>
+                        <div class="suggest-box">
+                            <label>Portfolio Content Upgrades</label>
+                            <ul class="clean-list">
+                                <li *ngFor="let item of analysis.branding_strategy?.portfolio_content_suggestions">
+                                    {{item}}</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>

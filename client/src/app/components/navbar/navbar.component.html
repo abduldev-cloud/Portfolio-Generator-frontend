@@ -1,8 +1,24 @@
-<nav class="navbar">
-    <div class="logo">PortfolioGen</div>
-    <ul class="nav-links">
-        <li><a routerLink="/portfolio">Portfolio Generator</a></li>
-        <li><a routerLink="/resume">Resume Creator</a></li>
-        <li><a routerLink="/ats">ATS Checker</a></li>
-    </ul>
+<nav class="main-nav glass">
+    <div class="nav-container">
+        <div class="logo">
+            <span class="logo-symbol">P</span>
+            <span class="logo-text">Portfolio-Gen<span class="dot">.</span></span>
+        </div>
+
+        <div class="nav-links">
+            <a routerLink="/portfolio" routerLinkActive="active" class="nav-item">
+                <span class="icon">📁</span> Portfolio
+            </a>
+            <a routerLink="/resume" routerLinkActive="active" class="nav-item">
+                <span class="icon">📝</span> Resume
+            </a>
+            <a routerLink="/ats" routerLinkActive="active" class="nav-item">
+                <span class="icon">⚡</span> ATS Engine
+            </a>
+        </div>
+
+        <div class="nav-actions">
+            <!-- <button class="btn-premium">Go Pro</button> -->
+        </div>
+    </div>
 </nav>
