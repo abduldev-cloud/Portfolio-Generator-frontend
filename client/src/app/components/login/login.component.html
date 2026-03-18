@@ -1,0 +1,55 @@
+<div class="login-page">
+    <div class="login-container glass">
+        <div class="login-header">
+            <div class="logo-large">A</div>
+            <h1>Astra Platform</h1>
+            <p class="tagline" *ngIf="mode === 'login'">Sign in to access the dashboard</p>
+            <p class="tagline" *ngIf="mode === 'register'">Create your Astra account</p>
+        </div>
+
+        <div class="error-banner" *ngIf="error">
+            <span>⚠️</span> {{error}}
+        </div>
+
+        <form (ngSubmit)="submit()">
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" [(ngModel)]="username" name="username" placeholder="Enter username"
+                    autocomplete="username" required>
+            </div>
+
+            <div class="form-group" *ngIf="mode === 'register'">
+                <label>Email</label>
+                <input type="email" [(ngModel)]="email" name="email" placeholder="Enter email" autocomplete="email"
+                    required>
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" [(ngModel)]="password" name="password" placeholder="Enter password"
+                    autocomplete="current-password" required>
+            </div>
+
+            <button type="submit" class="btn-login" [disabled]="loading">
+                <span *ngIf="!loading && mode === 'login'">Sign In</span>
+                <span *ngIf="!loading && mode === 'register'">Create Account</span>
+                <span *ngIf="loading" class="loading-state">
+                    <span class="spinner"></span> Please wait...
+                </span>
+            </button>
+        </form>
+
+        <div class="login-footer">
+            <span *ngIf="mode === 'login'">Don't have an account?
+                <button class="btn-toggle" (click)="toggleMode()">Sign Up</button>
+            </span>
+            <span *ngIf="mode === 'register'">Already have an account?
+                <button class="btn-toggle" (click)="toggleMode()">Sign In</button>
+            </span>
+        </div>
+
+        <div class="admin-hint" *ngIf="mode === 'login'">
+            <span>Admin Demo:</span> admin / admin123
+        </div>
+    </div>
+</div>

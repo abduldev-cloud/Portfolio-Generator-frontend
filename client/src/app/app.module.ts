@@ -9,6 +9,10 @@ import { PortfolioGeneratorComponent } from './components/portfolio-generator/po
 import { ResumeCreatorComponent } from './components/resume-creator/resume-creator.component';
 import { AtsCheckerComponent } from './components/ats-checker/ats-checker.component';
 import { NavbarComponent } from './components/navbar/navbar.component';
+import { InterviewSimulatorComponent } from './components/interview-simulator/interview-simulator.component';
+import { LoginComponent } from './components/login/login.component';
+import { AdminDashboardComponent } from './components/admin-dashboard/admin-dashboard.component';
+import { LandingComponent } from './components/landing/landing.component';
 
 @NgModule({
   declarations: [
@@ -16,7 +20,11 @@ import { NavbarComponent } from './components/navbar/navbar.component';
     PortfolioGeneratorComponent,
     ResumeCreatorComponent,
     AtsCheckerComponent,
-    NavbarComponent
+    NavbarComponent,
+    InterviewSimulatorComponent,
+    LoginComponent,
+    AdminDashboardComponent,
+    LandingComponent
   ],
   imports: [
     BrowserModule,

@@ -11,36 +11,66 @@ export class AtsCheckerComponent {
   jobDescription = '';
   analysis: any = null;
   loading = false;
-  activeTab = 'roadmap';
+  parsing = false;
+  activeTab = 'overview';
+  selectedFile: File | null = null;
 
   constructor(private apiService: ApiService) { }
 
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      // Basic validation
+      const validTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!validTypes.includes(file.type) && !file.name.endsWith('.pdf') && !file.name.endsWith('.docx')) {
+        alert('Invalid file type. Please upload a PDF or Word document.');
+        event.target.value = ''; // Reset
+        return;
+      }
+
+      this.selectedFile = file;
+      this.uploadResume();
+      
+      // Reset input so user can pick same file again if needed
+      event.target.value = '';
+    }
+  }
+
+  uploadResume() {
+    if (!this.selectedFile) return;
+
+    this.parsing = true;
+    this.apiService.parseResume(this.selectedFile).subscribe({
+      next: (res) => {
+        this.resumeText = res.text;
+        this.parsing = false;
+        console.log('[Astra Agent] Resume parsed successfully');
+      },
+      error: (err) => {
+        console.error('[Astra Agent] Parsing failed:', err);
+        alert('Failed to parse file. Please ensure it is a valid PDF or DOCX.');
+        this.parsing = false;
+      }
+    });
+  }
+
   checkScore() {
     if (!this.resumeText || !this.jobDescription) {
-      alert('Please provide both resume text and job description to initialize analysis.');
+      alert('Please provide both resume text and job description.');
       return;
     }
 
     this.loading = true;
     this.apiService.checkAtsScore(this.resumeText, this.jobDescription).subscribe({
       next: (res) => {
-        // Ensure some defaults if AI structure varies slightly
-        if (res && res.ats_report) {
-          this.analysis = res;
-        } else {
-          // Fallback if AI didn't return perfect JSON structure
-          this.analysis = {
-            executive_summary: "Analysis complete, but structural normalization failed. Please review raw output.",
-            ats_report: { overall_score: 0, hiring_probability_band: "Unknown" },
-            ...res
-          };
-        }
+        this.analysis = res;
         this.loading = false;
-        this.activeTab = 'roadmap';
+        this.activeTab = 'overview';
+        console.log('[Astra Agent] Analysis received:', res);
       },
       error: (err) => {
-        console.error('AI Strategy Interface Error:', err);
-        alert('The Intelligence Engine encountered an error. Verify your Gemini API Key in the server .env file.');
+        console.error('[Astra Agent] Error:', err);
+        alert('Agent execution failed. Check your API key and server connection.');
         this.loading = false;
       }
     });
@@ -48,15 +78,47 @@ export class AtsCheckerComponent {
 
   reset() {
     this.analysis = null;
-    this.activeTab = 'roadmap';
+    this.activeTab = 'overview';
   }
 
-  copyToClipboard(text: string) {
+  // Helper: get a specific tool result from steps_executed
+  getToolResult(toolName: string): any {
+    if (!this.analysis?.steps_executed) return null;
+    const step = this.analysis.steps_executed.find((s: any) => s.tool === toolName);
+    return step?.result || null;
+  }
+
+  get resumeData(): any {
+    return this.getToolResult('resume_parser') || {};
+  }
+
+  get jobData(): any {
+    return this.getToolResult('job_analyzer') || {};
+  }
+
+  get matchData(): any {
+    return this.getToolResult('skill_matcher') || {};
+  }
+
+  get overallScore(): number {
+    return this.analysis?.final_analysis?.overall_score || this.matchData?.overall_score || 0;
+  }
+
+  get hiringBand(): string {
+    return this.analysis?.final_analysis?.hiring_probability_band || this.matchData?.hiring_probability_band || 'Unknown';
+  }
+
+  get hiringBandClass(): string {
+    return this.hiringBand.toLowerCase().replace(/\s+/g, '-');
+  }
+
+  copyToClipboard(text: any) {
     if (!text) return;
-    navigator.clipboard.writeText(text).then(() => {
-      alert('Optimized resume content copied to clipboard! You can now paste this into your template.');
+    const str = typeof text === 'string' ? text : JSON.stringify(text, null, 2);
+    navigator.clipboard.writeText(str).then(() => {
+      alert('Copied to clipboard!');
     }).catch(err => {
-      console.error('Could not copy text: ', err);
+      console.error('Copy failed:', err);
     });
   }
 }

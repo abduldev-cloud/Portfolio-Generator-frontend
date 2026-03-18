@@ -1,0 +1,204 @@
+<div class="hero-section">
+    <h1 class="glow-text">Interview Simulator <span class="v-badge">AI</span></h1>
+    <p class="subtitle">AI-predicted questions with STAR method coaching</p>
+</div>
+
+<div class="engine-layout">
+    <!-- INPUT -->
+    <div class="input-card glass" *ngIf="!data">
+        <div class="input-header">
+            <div class="status-dot pulsing"></div>
+            <span>Paste Resume & Target Job</span>
+        </div>
+
+        <div class="grid-inputs">
+            <div class="field-group">
+                <label>📄 Your Resume</label>
+                <div class="textarea-wrapper">
+                    <textarea [(ngModel)]="resumeText" placeholder="Paste your resume text..." rows="10"></textarea>
+                </div>
+            </div>
+            <div class="field-group">
+                <label>💼 Job Description</label>
+                <div class="textarea-wrapper">
+                    <textarea [(ngModel)]="jobDescription" placeholder="Paste the target job description..."
+                        rows="10"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-footer">
+            <button (click)="generate()" class="btn-primary-glow" [disabled]="loading">
+                <span *ngIf="!loading">🎤 Generate Interview Prep</span>
+                <span *ngIf="loading" class="loading-state">
+                    <span class="spinner"></span> Crafting questions...
+                </span>
+            </button>
+        </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="interview-dashboard" *ngIf="data">
+        <header class="dashboard-header">
+            <button (click)="reset()" class="btn-back">← New Session</button>
+            <div class="badge-row">
+                <span class="status-pill green">✅ Prep Ready</span>
+                <span class="status-pill blue">{{(data.technical_questions?.length || 0) +
+                    (data.behavioral_questions?.length || 0)}} Questions</span>
+            </div>
+        </header>
+
+        <!-- Role Summary -->
+        <div class="role-banner glass">
+            <div class="role-icon">🎯</div>
+            <div class="role-text">
+                <h3>Target Role</h3>
+                <p>{{data.role_summary}}</p>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="interview-tabs glass">
+            <nav class="tabs-nav">
+                <button [class.active]="activeTab === 'technical'" (click)="activeTab = 'technical'">🔧 Technical
+                    ({{data.technical_questions?.length || 0}})</button>
+                <button [class.active]="activeTab === 'behavioral'" (click)="activeTab = 'behavioral'">🧠 Behavioral
+                    ({{data.behavioral_questions?.length || 0}})</button>
+                <button [class.active]="activeTab === 'tips'" (click)="activeTab = 'tips'">💡 Tips & Strategy</button>
+            </nav>
+
+            <div class="tab-body">
+                <!-- TECHNICAL -->
+                <div class="tab-pane animate-fade" *ngIf="activeTab === 'technical'">
+                    <div class="question-card" *ngFor="let q of data.technical_questions; let i = index"
+                        [class.expanded]="expandedQuestion === i" (click)="toggleQuestion(i)">
+                        <div class="q-header">
+                            <span class="q-num">Q{{i + 1}}</span>
+                            <div class="q-main">
+                                <p class="q-text">{{q.question}}</p>
+                                <div class="q-meta">
+                                    <span class="difficulty-badge" [ngClass]="getDifficultyClass(q.difficulty)">
+                                        {{q.difficulty}}
+                                    </span>
+                                    <span class="category-badge">{{q.category}}</span>
+                                </div>
+                            </div>
+                            <span class="q-toggle">{{expandedQuestion === i ? '▲' : '▼'}}</span>
+                        </div>
+                        <div class="q-body" *ngIf="expandedQuestion === i">
+                            <div class="why-asked">
+                                <strong>Why this is asked:</strong>
+                                <p>{{q.why_asked}}</p>
+                            </div>
+                            <div class="star-answer">
+                                <h4>STAR Method Answer</h4>
+                                <div class="star-grid">
+                                    <div class="star-item">
+                                        <span class="star-label s">S</span>
+                                        <p>{{q.star_answer?.situation}}</p>
+                                    </div>
+                                    <div class="star-item">
+                                        <span class="star-label t">T</span>
+                                        <p>{{q.star_answer?.task}}</p>
+                                    </div>
+                                    <div class="star-item">
+                                        <span class="star-label a">A</span>
+                                        <p>{{q.star_answer?.action}}</p>
+                                    </div>
+                                    <div class="star-item">
+                                        <span class="star-label r">R</span>
+                                        <p>{{q.star_answer?.result}}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="key-points" *ngIf="q.key_points?.length">
+                                <strong>Key Points:</strong>
+                                <ul>
+                                    <li *ngFor="let kp of q.key_points">{{kp}}</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BEHAVIORAL -->
+                <div class="tab-pane animate-fade" *ngIf="activeTab === 'behavioral'">
+                    <div class="question-card" *ngFor="let q of data.behavioral_questions; let i = index"
+                        [class.expanded]="expandedQuestion === (100 + i)" (click)="toggleQuestion(100 + i)">
+                        <div class="q-header">
+                            <span class="q-num beh">Q{{i + 1}}</span>
+                            <div class="q-main">
+                                <p class="q-text">{{q.question}}</p>
+                                <div class="q-meta">
+                                    <span class="category-badge beh">{{q.category}}</span>
+                                </div>
+                            </div>
+                            <span class="q-toggle">{{expandedQuestion === (100 + i) ? '▲' : '▼'}}</span>
+                        </div>
+                        <div class="q-body" *ngIf="expandedQuestion === (100 + i)">
+                            <div class="why-asked">
+                                <strong>Why this is asked:</strong>
+                                <p>{{q.why_asked}}</p>
+                            </div>
+                            <div class="star-answer">
+                                <h4>STAR Method Answer</h4>
+                                <div class="star-grid">
+                                    <div class="star-item">
+                                        <span class="star-label s">S</span>
+                                        <p>{{q.star_answer?.situation}}</p>
+                                    </div>
+                                    <div class="star-item">
+                                        <span class="star-label t">T</span>
+                                        <p>{{q.star_answer?.task}}</p>
+                                    </div>
+                                    <div class="star-item">
+                                        <span class="star-label a">A</span>
+                                        <p>{{q.star_answer?.action}}</p>
+                                    </div>
+                                    <div class="star-item">
+                                        <span class="star-label r">R</span>
+                                        <p>{{q.star_answer?.result}}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="tips-list" *ngIf="q.tips?.length">
+                                <strong>Pro Tips:</strong>
+                                <ul>
+                                    <li *ngFor="let tip of q.tips">{{tip}}</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TIPS -->
+                <div class="tab-pane animate-fade" *ngIf="activeTab === 'tips'">
+                    <div class="tips-grid">
+                        <div class="tips-section glass-inner">
+                            <h4>✅ Preparation Tips</h4>
+                            <ul class="clean-list">
+                                <li *ngFor="let tip of data.preparation_tips">{{tip}}</li>
+                            </ul>
+                        </div>
+                        <div class="tips-section glass-inner">
+                            <h4>🚫 Red Flags to Avoid</h4>
+                            <ul class="clean-list red">
+                                <li *ngFor="let flag of data.red_flags_to_avoid">{{flag}}</li>
+                            </ul>
+                        </div>
+                        <div class="tips-section glass-inner full-width" *ngIf="data.salary_negotiation">
+                            <h4>💰 Salary Negotiation</h4>
+                            <div class="salary-range">
+                                <span class="range-label">Estimated Range:</span>
+                                <span class="range-value">{{data.salary_negotiation.estimated_range}}</span>
+                            </div>
+                            <ul class="clean-list">
+                                <li *ngFor="let tip of data.salary_negotiation.negotiation_tips">{{tip}}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

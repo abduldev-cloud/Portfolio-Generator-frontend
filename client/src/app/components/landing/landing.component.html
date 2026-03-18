@@ -1,0 +1,103 @@
+<!-- HERO -->
+<section class="hero">
+    <div class="hero-badge">🚀 AI-Powered Career Platform</div>
+    <h1 class="hero-title">
+        Your career deserves<br>
+        <span class="gradient-text">Astra-level intelligence.</span>
+    </h1>
+    <p class="hero-subtitle">
+        Build portfolios, craft resumes, crush ATS screens, and ace interviews — all powered by Gemini AI.
+    </p>
+    <div class="hero-cta">
+        <a routerLink="/resume" class="btn-primary">Get Started Free →</a>
+        <a routerLink="/ats" class="btn-secondary">Try ATS Engine</a>
+    </div>
+
+    <!-- Floating Orbs -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+</section>
+
+<!-- STATS -->
+<section class="stats-bar">
+    <div class="stat-item" *ngFor="let s of stats">
+        <span class="stat-value">{{s.value}}</span>
+        <span class="stat-label">{{s.label}}</span>
+    </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features-section">
+    <div class="section-header">
+        <h2>Everything you need to <span class="gradient-text">land the job.</span></h2>
+        <p>Four powerful tools. One platform. Zero friction.</p>
+    </div>
+
+    <div class="features-grid">
+        <a [routerLink]="f.route" class="feature-card glass glass-hover" *ngFor="let f of features">
+            <div class="feature-top-bar" [style.background]="f.color + '20'" [style.borderColor]="f.color + '40'">
+                <span class="feature-icon">{{f.icon}}</span>
+                <span class="feature-tag" [style.color]="f.color">{{f.tag}}</span>
+            </div>
+            <h3>{{f.title}}</h3>
+            <p>{{f.desc}}</p>
+            <div class="feature-arrow" [style.color]="f.color">Explore →</div>
+        </a>
+    </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section">
+    <div class="section-header">
+        <h2>How <span class="gradient-text">Astra</span> works</h2>
+        <p>Three steps to career acceleration.</p>
+    </div>
+
+    <div class="steps-row">
+        <div class="step glass">
+            <div class="step-num">01</div>
+            <h3>Upload & Fill</h3>
+            <p>Paste your resume or auto-fill from GitHub. Add your target job description.</p>
+        </div>
+        <div class="step-connector">→</div>
+        <div class="step glass">
+            <div class="step-num">02</div>
+            <h3>AI Analyzes</h3>
+            <p>Gemini AI runs 6-stage analysis: parsing, matching, gap detection, and optimization.</p>
+        </div>
+        <div class="step-connector">→</div>
+        <div class="step glass">
+            <div class="step-num">03</div>
+            <h3>Download & Apply</h3>
+            <p>Get your optimized resume, interview prep, and portfolio — ready to deploy.</p>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+    <div class="cta-card glass">
+        <h2>Ready to supercharge your career?</h2>
+        <p>Join candidates who use AI to stand out, not blend in.</p>
+        <a routerLink="/resume" class="btn-primary large">Start Building →</a>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="landing-footer">
+    <div class="footer-content">
+        <div class="footer-brand">
+            <span class="footer-logo">A</span>
+            <span class="footer-name">Astra</span>
+        </div>
+        <p class="footer-tagline">AI-Powered Career Intelligence Platform</p>
+        <div class="footer-links">
+            <a routerLink="/portfolio">Portfolio</a>
+            <a routerLink="/resume">Resume</a>
+            <a routerLink="/ats">ATS Engine</a>
+            <a routerLink="/interview">Interview</a>
+        </div>
+        <p class="copyright">© 2026 Astra. Built with Angular, Node.js & Gemini AI.</p>
+    </div>
+</footer>

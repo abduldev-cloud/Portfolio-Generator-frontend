@@ -31,6 +31,12 @@ export class ApiService {
     return this.http.post(`${this.apiUrl}/ats/check`, { resumeText, jobDescription });
   }
 
+  parseResume(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('resume', file);
+    return this.http.post(`${this.apiUrl}/ats/parse-resume`, formData);
+  }
+
   // Export Routes
   exportToPdf(resumeContent: any, template: string): Observable<Blob> {
     return this.http.post(`${this.apiUrl}/resume/export/pdf`, { resumeContent, template }, {
@@ -42,5 +48,15 @@ export class ApiService {
     return this.http.post(`${this.apiUrl}/resume/export/word`, { resumeContent }, {
       responseType: 'blob'
     });
+  }
+
+  // GitHub Sync
+  getGithubProfile(username: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/github/profile/${username}`);
+  }
+
+  // Interview Simulator
+  generateInterview(resumeText: string, jobDescription: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/interview/generate`, { resumeText, jobDescription });
   }
 }
