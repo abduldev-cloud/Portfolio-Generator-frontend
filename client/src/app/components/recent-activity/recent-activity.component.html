@@ -1,0 +1,33 @@
+<div class="activity-pane glass">
+    <div class="pane-header">
+        <div class="title-group">
+            <span class="pulse-icon"></span>
+            <h3>Recent Activity</h3>
+        </div>
+        <button *ngIf="activities.length > 0" class="btn-clear" (click)="clearAll()">Clear All</button>
+    </div>
+
+    <div class="activity-list" *ngIf="activities.length > 0; else empty">
+        <div class="activity-item" *ngFor="let item of activities" [attr.data-type]="item.type">
+            <div class="item-icon">{{ getIcon(item.type) }}</div>
+            <div class="item-content">
+                <div class="item-row">
+                    <span class="item-title">{{ item.title }}</span>
+                    <span class="item-time">{{ formatDate(item.timestamp) }}</span>
+                </div>
+                <div class="item-details">{{ item.details }}</div>
+                <div class="item-tag" *ngIf="item.template">
+                    <span class="tag-dot"></span> {{ item.template | titlecase }} Template
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <ng-template #empty>
+        <div class="empty-state">
+            <div class="empty-icon">☕</div>
+            <p>No recent actions yet.</p>
+            <span>Your creative journey begins here.</span>
+        </div>
+    </ng-template>
+</div>

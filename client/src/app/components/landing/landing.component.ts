@@ -1,11 +1,21 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { ActivityService, Activity } from '../../services/activity.service';
 
 @Component({
   selector: 'app-landing',
   templateUrl: './landing.component.html',
   styleUrls: ['./landing.component.css']
 })
-export class LandingComponent {
+export class LandingComponent implements OnInit {
+  activities: Activity[] = [];
+
+  constructor(private activityService: ActivityService) {}
+
+  ngOnInit(): void {
+    this.activityService.activities$.subscribe(data => {
+      this.activities = data;
+    });
+  }
   features = [
     {
       icon: '📁',

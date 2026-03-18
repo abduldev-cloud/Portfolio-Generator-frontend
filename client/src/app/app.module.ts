@@ -13,6 +13,7 @@ import { InterviewSimulatorComponent } from './components/interview-simulator/in
 import { LoginComponent } from './components/login/login.component';
 import { AdminDashboardComponent } from './components/admin-dashboard/admin-dashboard.component';
 import { LandingComponent } from './components/landing/landing.component';
+import { RecentActivityComponent } from './components/recent-activity/recent-activity.component';
 
 @NgModule({
   declarations: [
@@ -24,7 +25,8 @@ import { LandingComponent } from './components/landing/landing.component';
     InterviewSimulatorComponent,
     LoginComponent,
     AdminDashboardComponent,
-    LandingComponent
+    LandingComponent,
+    RecentActivityComponent
   ],
   imports: [
     BrowserModule,
