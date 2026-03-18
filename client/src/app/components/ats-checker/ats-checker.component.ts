@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { ApiService } from '../../services/api.service';
+import { ActivityService } from '../../services/activity.service';
 
 @Component({
   selector: 'app-ats-checker',
@@ -15,7 +16,10 @@ export class AtsCheckerComponent {
   activeTab = 'overview';
   selectedFile: File | null = null;
 
-  constructor(private apiService: ApiService) { }
+  constructor(
+    private apiService: ApiService,
+    private activityService: ActivityService
+  ) { }
 
   onFileSelected(event: any) {
     const file = event.target.files[0];
@@ -67,6 +71,15 @@ export class AtsCheckerComponent {
         this.loading = false;
         this.activeTab = 'overview';
         console.log('[Astra Agent] Analysis received:', res);
+        
+        // Log activity
+        const jobTitle = this.jobData?.position || 'Profile';
+        this.activityService.logActivity(
+          'ats', 
+          `ATS Check: ${jobTitle}`,
+          `Score: ${this.analysis?.overall_score}%`,
+          ''
+        );
       },
       error: (err) => {
         console.error('[Astra Agent] Error:', err);

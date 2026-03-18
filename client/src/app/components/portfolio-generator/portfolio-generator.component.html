@@ -1,24 +1,180 @@
-<div class="generator-container">
-    <h2>Generate Your Portfolio</h2>
-    <form (ngSubmit)="generate()">
-        <div class="form-group">
-            <label for="name">Full Name</label>
-            <input type="text" id="name" name="name" [(ngModel)]="userData.name" required>
+<div class="studio-container">
+    <!-- Sidebar Navigation -->
+    <div class="studio-sidebar glass">
+        <div class="logo-area">
+            <span class="logo-icon">🚀</span>
+            <h3>Portfolio <span>Studio</span></h3>
         </div>
-        <div class="form-group">
-            <label for="title">Professional Title</label>
-            <input type="text" id="title" name="title" [(ngModel)]="userData.title" required>
+
+        <nav class="section-nav" *ngIf="currentStep === 'editor'">
+            <button *ngFor="let s of sections" class="nav-item" [class.active]="activeSection === s.id"
+                (click)="activeSection = s.id">
+                <span class="icon">{{s.icon}}</span>
+                <span class="label">{{s.label}}</span>
+                <span class="status-dot" [class.filled]="portfolioData[s.id]?.length > 0"></span>
+            </button>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="progress-container">
+                <div class="progress-bar" [style.width.%]="getCompletedPercentage()"></div>
+            </div>
+            <p>{{getCompletedPercentage()}}% Complete</p>
         </div>
-        <div class="form-group">
-            <label for="bio">Short Bio</label>
-            <textarea id="bio" name="bio" [(ngModel)]="userData.bio" rows="4"></textarea>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="studio-main">
+        <!-- Top Toolbar -->
+        <div class="topbar glass">
+            <div class="breadcrumb">
+                <span (click)="currentStep = 'templates'">Templates</span>
+                <span class="sep" *ngIf="currentStep === 'editor'">/</span>
+                <span class="active" *ngIf="currentStep === 'editor'">Editor</span>
+            </div>
+            <div class="topbar-actions">
+                <button class="btn-sample" *ngIf="currentStep === 'editor'" (click)="fillSampleData()">✨ Sample Data</button>
+                <button class="btn-generate" (click)="generate()" [disabled]="isGenerating">
+                    <span *ngIf="!isGenerating">📦 Download ZIP</span>
+                    <span *ngIf="isGenerating" class="spinner-sm"></span>
+                </button>
+            </div>
         </div>
-        <div class="form-group">
-            <label for="template">Select Template</label>
-            <select id="template" name="template" [(ngModel)]="selectedTemplate">
-                <option value="default">Modern Minimal</option>
-            </select>
+
+        <!-- Template Selection Step -->
+        <div class="step-content animate-fade" *ngIf="currentStep === 'templates'">
+            <header class="step-header">
+                <h1>Pick your <span>Vibe</span></h1>
+                <p>Choose a professional portfolio template to get started. All templates are fully responsive and SEO optimized.</p>
+            </header>
+
+            <div class="template-grid">
+                <div *ngFor="let t of templates" class="tpl-card glass" [class.selected]="selectedTemplate === t.id"
+                    (click)="selectTemplate(t.id)">
+                    <div class="tpl-preview" [style.background]="t.color">
+                        <span class="tpl-icon">{{t.icon}}</span>
+                        <div class="tpl-overlay">
+                            <button class="btn-select">Use Template</button>
+                        </div>
+                    </div>
+                    <div class="tpl-info">
+                        <h3>{{t.name}}</h3>
+                        <p>{{t.desc}}</p>
+                    </div>
+                </div>
+            </div>
         </div>
-        <button type="submit" class="btn-generate">Download Portfolio ZIP</button>
-    </form>
+
+        <!-- Editor Step -->
+        <div class="step-content editor-layout animate-fade" *ngIf="currentStep === 'editor'">
+            <div class="editor-pane glass">
+                <!-- PERSONAL INFO -->
+                <div class="section-pane" *ngIf="activeSection === 'personal'">
+                    <h2 class="section-heading">👤 Personal Information</h2>
+                    <p class="section-desc">The primary details that define your professional identity.</p>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Full Name *</label>
+                            <input type="text" [(ngModel)]="portfolioData.personalInfo.fullName" placeholder="John Doe">
+                        </div>
+                        <div class="form-group">
+                            <label>Job Title *</label>
+                            <input type="text" [(ngModel)]="portfolioData.personalInfo.jobTitle"
+                                placeholder="Software Engineer">
+                        </div>
+                        <div class="form-group">
+                            <label>Email *</label>
+                            <input type="email" [(ngModel)]="portfolioData.personalInfo.email"
+                                placeholder="john@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="tel" [(ngModel)]="portfolioData.personalInfo.phone" placeholder="+91 98765 43210">
+                        </div>
+                        <div class="form-group">
+                            <label>Location</label>
+                            <input type="text" [(ngModel)]="portfolioData.personalInfo.location" placeholder="City, Country">
+                        </div>
+                        <div class="form-group">
+                            <label>LinkedIn URL</label>
+                            <input type="url" [(ngModel)]="portfolioData.personalInfo.linkedin"
+                                placeholder="linkedin.com/in/johndoe">
+                        </div>
+                        <div class="form-group">
+                            <label>GitHub URL</label>
+                            <input type="url" [(ngModel)]="portfolioData.personalInfo.github" placeholder="github.com/johndoe">
+                        </div>
+                        <div class="form-group">
+                            <label>Portfolio URL</label>
+                            <input type="url" [(ngModel)]="portfolioData.personalInfo.portfolio" placeholder="johndoe.dev">
+                        </div>
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Professional Summary *</label>
+                        <textarea [(ngModel)]="portfolioData.personalInfo.summary" rows="4"
+                            placeholder="A brief intro about yourself..."></textarea>
+                    </div>
+                </div>
+
+                <!-- EXPERIENCE -->
+                <div class="section-pane" *ngIf="activeSection === 'experience'">
+                    <h2 class="section-heading">💼 Work Experience</h2>
+                    <div class="entry-card" *ngFor="let exp of portfolioData.experience; let i = index; trackBy: trackByIndex">
+                        <div class="entry-header">
+                            <span class="entry-num">{{i + 1}}</span>
+                            <button class="btn-remove" (click)="removeExperience(i)" *ngIf="portfolioData.experience.length > 1">✕</button>
+                        </div>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Company *</label>
+                                <input type="text" [(ngModel)]="exp.company" placeholder="Google">
+                            </div>
+                            <div class="form-group">
+                                <label>Role *</label>
+                                <input type="text" [(ngModel)]="exp.role" placeholder="Senior Engineer">
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn-add-entry" (click)="addExperience()">+ Add Position</button>
+                </div>
+
+                <!-- SKILLS -->
+                <div class="section-pane" *ngIf="activeSection === 'skills'">
+                    <h2 class="section-heading">⚡ Skills</h2>
+                    <div class="form-group">
+                        <label>Technical Skills</label>
+                        <input type="text" [(ngModel)]="technicalSkillString" (change)="updateSkills()" placeholder="JS, Python, TS...">
+                    </div>
+                    <div class="form-group">
+                        <label>Frameworks</label>
+                        <input type="text" [(ngModel)]="frameworkSkillString" (change)="updateSkills()" placeholder="Angular, React...">
+                    </div>
+                </div>
+
+                <!-- PROJECTS -->
+                <div class="section-pane" *ngIf="activeSection === 'projects'">
+                    <h2 class="section-heading">🛠️ Projects</h2>
+                    <div class="entry-card" *ngFor="let p of portfolioData.projects; let i = index; trackBy: trackByIndex">
+                        <div class="entry-header">
+                            <span class="entry-num">{{i + 1}}</span>
+                            <button class="btn-remove" (click)="removeProject(i)">✕</button>
+                        </div>
+                        <div class="form-grid">
+                            <input type="text" [(ngModel)]="p.name" placeholder="Project Name">
+                            <input type="text" [(ngModel)]="p.techStack" placeholder="Tech Stack">
+                        </div>
+                        <textarea [(ngModel)]="p.description" rows="3" placeholder="Project Description"></textarea>
+                    </div>
+                    <button class="btn-add-entry" (click)="addProject()">+ Add Project</button>
+                </div>
+
+                <!-- FALLBACK SECTIONS (SIMPLIFIED FOR NOW) -->
+                <div class="section-pane" *ngIf="['education', 'certifications', 'languages', 'awards'].includes(activeSection)">
+                    <h2 class="section-heading">{{activeSection | titlecase}}</h2>
+                    <p class="empty-state">This section will be included in your portfolio. Content entry for this section is coming soon.</p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

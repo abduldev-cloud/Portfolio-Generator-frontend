@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ApiService } from '../../services/api.service';
+import { ActivityService } from '../../services/activity.service';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -88,7 +89,10 @@ export class ResumeCreatorComponent implements OnInit {
     { id: 'awards', label: 'Awards', icon: '🏆', required: false }
   ];
 
-  constructor(private apiService: ApiService) { }
+  constructor(
+    private apiService: ApiService,
+    private activityService: ActivityService
+  ) { }
 
   ngOnInit() { }
 
@@ -361,9 +365,16 @@ export class ResumeCreatorComponent implements OnInit {
       pdf.addImage(contentDataURL, 'PNG', 0, 0, imgWidth, imgHeight);
 
       // Sanitize filename
-      const safeName = (this.resume.personalInfo.fullName || 'Astra').replace(/[^a-z0-9]/gi, '_');
-      pdf.save(`${safeName}-Resume.pdf`);
+      const fileName = `${(this.resume.personalInfo.fullName || 'Astra').replace(/\s+/g, '_')}_Resume.pdf`;
+      pdf.save(fileName);
       
+      // Log activity after successful save
+      this.activityService.logActivity(
+        'resume', 
+        `Resume: ${this.resume.personalInfo.fullName || 'Untitled'}`,
+        `Exported as PDF using ${this.selectedTemplate} template`, // Assuming selectedTemplate is available
+        this.selectedTemplate // Assuming selectedTemplate is available
+      );
       this.isExporting = false;
     }).catch(err => {
       console.error('PDF Export Error:', err);

@@ -411,6 +411,12 @@
     opacity: 0.6;
 }
 
+.activity-section {
+    max-width: 1000px;
+    margin: 0 auto 5rem;
+    padding: 0 2rem;
+}
+
 /* RESPONSIVE */
 @media (max-width: 768px) {
     .hero-title {

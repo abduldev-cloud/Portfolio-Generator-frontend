@@ -19,6 +19,11 @@
     <div class="orb orb-3"></div>
 </section>
 
+<!-- RECENT ACTIVITY - ONLY IF DATA EXISTS -->
+<section class="activity-section container" *ngIf="activities.length > 0">
+    <app-recent-activity></app-recent-activity>
+</section>
+
 <!-- STATS -->
 <section class="stats-bar">
     <div class="stat-item" *ngFor="let s of stats">
