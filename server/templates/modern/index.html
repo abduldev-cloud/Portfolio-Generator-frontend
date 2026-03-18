@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{name}} | Portfolio</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="glow-bg"></div>
+    
+    <nav class="glass-nav">
+        <div class="logo">{{name}}</div>
+        <div class="nav-links">
+            <a href="#about">About</a>
+            <a href="#projects">Projects</a>
+            <a href="#experience">Experience</a>
+            <a href="#contact">Contact</a>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="container">
+            <h1 class="animate-up">I am <span>{{name}}</span></h1>
+            <p class="subtitle animate-up delay-1">{{title}}</p>
+            <div class="hero-btns animate-up delay-2">
+                <a href="#projects" class="btn-primary">View My Work</a>
+                <a href="#contact" class="btn-secondary">Let's Talk</a>
+            </div>
+        </div>
+    </header>
+
+    <section id="about" class="container">
+        <h2 class="section-title">About Me</h2>
+        <div class="glass-card about-card">
+            <p>{{summary}}</p>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <h4>Location</h4>
+                    <p>{{location}}</p>
+                </div>
+                <div class="stat-item">
+                    <h4>Experience</h4>
+                    <p>2+ Years</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="projects" class="container">
+        <h2 class="section-title">Featured Projects</h2>
+        <div class="projects-grid">
+            {{#each projects}}
+            <div class="glass-card project-card">
+                <div class="project-info">
+                    <h3>{{item.name}}</h3>
+                    <p class="tech">{{item.techStack}}</p>
+                    <p>{{item.description}}</p>
+                </div>
+            </div>
+            {{/each}}
+        </div>
+    </section>
+
+    <section id="skills" class="container">
+        <h2 class="section-title">My Toolkit</h2>
+        <div class="skills-wrapper">
+            <div class="skill-category">
+                <h3>Technical</h3>
+                <div class="skill-tags">
+                    {{#each techSkills}}
+                    <span class="skill-tag">{{item.name}}</span>
+                    {{/each}}
+                </div>
+            </div>
+            <div class="skill-category">
+                <h3>Frameworks</h3>
+                <div class="skill-tags">
+                    {{#each frameworks}}
+                    <span class="skill-tag">{{item.name}}</span>
+                    {{/each}}
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="experience" class="container">
+        <h2 class="section-title">Career Path</h2>
+        <div class="timeline">
+            {{#each experience}}
+            <div class="timeline-item glass-card">
+                <div class="time-header">
+                    <h3>{{item.role}} at <span>{{item.company}}</span></h3>
+                    <span class="date">{{item.startDate}} - {{item.endDate}}</span>
+                </div>
+                <p>{{item.description}}</p>
+            </div>
+            {{/each}}
+        </div>
+    </section>
+
+    <footer id="contact">
+        <div class="container footer-content">
+            <h2>Let's build something <br><span>Extraordinary</span></h2>
+            <div class="contact-links">
+                <a href="mailto:{{email}}">{{email}}</a>
+                <div class="socials">
+                    <a href="https://{{linkedin}}">LinkedIn</a>
+                    <a href="https://{{github}}">GitHub</a>
+                </div>
+            </div>
+            <p class="copyright">© 2024 {{name}}. Built with Astra Portfolio Generator.</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

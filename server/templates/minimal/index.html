@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{name}} | Portfolio</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <main class="content-wrapper">
+        <header class="minimal-header">
+            <span class="badge">Available for Work</span>
+            <h1>{{name}}</h1>
+            <p class="role">{{title}}</p>
+            <p class="summary">{{summary}}</p>
+            <div class="header-links">
+                <a href="mailto:{{email}}" class="btn-main">Get in touch</a>
+                <div class="social-links">
+                    <a href="https://{{github}}">GitHub</a>
+                    <a href="https://{{linkedin}}">LinkedIn</a>
+                </div>
+            </div>
+        </header>
+
+        <section class="minimal-section">
+            <h2 class="title">Work Experience</h2>
+            <div class="experience-list">
+                {{#each experience}}
+                <div class="exp-item">
+                    <div class="exp-meta">
+                        <h3>{{item.company}}</h3>
+                        <span class="period">{{item.startDate}} - {{item.endDate}}</span>
+                    </div>
+                    <p class="role-desc">{{item.role}}</p>
+                    <p class="desc">{{item.description}}</p>
+                </div>
+                {{/each}}
+            </div>
+        </section>
+
+        <section class="minimal-section">
+            <h2 class="title">Selected Projects</h2>
+            <div class="projects-grid">
+                {{#each projects}}
+                <div class="project-card">
+                    <h3>{{item.name}}</h3>
+                    <p class="stack">{{item.techStack}}</p>
+                    <p>{{item.description}}</p>
+                </div>
+                {{/each}}
+            </div>
+        </section>
+
+        <section class="minimal-section">
+            <h2 class="title">Expertise</h2>
+            <div class="skills-grid">
+                <div class="skill-category">
+                    <h3>Core Technologies</h3>
+                    <div class="tags">
+                        {{#each techSkills}}
+                        <span class="tag">{{item.name}}</span>
+                        {{/each}}
+                    </div>
+                </div>
+                <div class="skill-category">
+                    <h3>Frameworks</h3>
+                    <div class="tags">
+                        {{#each frameworks}}
+                        <span class="tag">{{item.name}}</span>
+                        {{/each}}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="minimal-footer">
+            <p>© 2024 {{name}}. {{location}}.</p>
+        </footer>
+    </main>
+    <script src="js/main.js"></script>
+</body>
+</html>

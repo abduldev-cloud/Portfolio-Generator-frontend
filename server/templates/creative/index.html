@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{name}} // Professional Personal Site</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
+
+    <section class="h-screen bg-vibrant">
+        <nav class="creative-nav">
+            <div class="logo">/{{name}}</div>
+            <div class="status">● Available for Hire</div>
+        </nav>
+
+        <div class="hero-content">
+            <h1 class="stagger">Hello. I'm <br> <span class="highlight">{{name}}</span></h1>
+            <p class="role-marquee">{{title}} • {{title}} • {{title}}</p>
+            <div class="cta-circle">
+                <a href="#projects">Work ↓</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="about" class="about-section glass-box">
+        <div class="marquee">
+            <span>ABOUT ME • ABOUT ME • ABOUT ME • ABOUT ME • </span>
+        </div>
+        <div class="about-grid">
+            <div class="summary-box">
+                <p>{{summary}}</p>
+                <div class="contact-box">
+                    <a href="mailto:{{email}}" class="email">{{email}}</a>
+                    <p>{{location}}</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="projects" class="projects-section">
+        <h2 class="title">My <span>Portfolio</span></h2>
+        <div class="creative-grid">
+            {{#each projects}}
+            <div class="card card-vibrant">
+                <div class="card-inner">
+                    <h3>{{item.name}}</h3>
+                    <p class="stack">{{item.techStack}}</p>
+                    <p>{{item.description}}</p>
+                </div>
+            </div>
+            {{/each}}
+        </div>
+    </section>
+
+    <section class="skills-section">
+        <h2 class="title">My <span>Stack</span></h2>
+        <div class="stack-scroller">
+            <div class="group">
+                {{#each techSkills}}
+                <span class="box">{{item.name}}</span>
+                {{/each}}
+                {{#each frameworks}}
+                <span class="box outline">{{item.name}}</span>
+                {{/each}}
+            </div>
+        </div>
+    </section>
+
+    <footer class="creative-footer">
+        <div class="footer-hero">
+            <h2>Let's <span>Create</span></h2>
+            <a href="mailto:{{email}}" class="big-btn">Say Hi</a>
+        </div>
+        <div class="footer-bottom">
+            <div class="socials">
+                <a href="https://{{github}}">GitHub</a>
+                <a href="https://{{linkedin}}">LinkedIn</a>
+            </div>
+            <p>© 2024 {{name}}. Designed with Astra.</p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
