@@ -1,69 +1,738 @@
-<div class="resume-container">
-    <h2>Resume Creator</h2>
+<!-- TEMPLATE GALLERY -->
+<div class="resume-page" *ngIf="currentStep === 'templates'">
+    <div class="page-header">
+        <h1 class="glow-text">Resume Studio</h1>
+        <p class="subtitle">Choose a template to get started</p>
+    </div>
 
-    <div class="template-selector section" *ngIf="!templateSelected">
-        <h3>Step 1: Choose a Template</h3>
-        <div class="templates-grid">
-            <div class="template-card" (click)="selectTemplate('classic')">
-                <div class="template-preview classic"></div>
-                <p>Classic Professional</p>
+    <div class="templates-gallery">
+        <div class="template-card glass glass-hover" *ngFor="let t of templates" (click)="selectTemplate(t.id)">
+            <div class="template-preview" [style.borderColor]="t.color">
+                <div class="preview-mockup">
+                    <div class="mock-header" [style.background]="t.color"></div>
+                    <div class="mock-line w80"></div>
+                    <div class="mock-line w60"></div>
+                    <div class="mock-divider"></div>
+                    <div class="mock-line w90"></div>
+                    <div class="mock-line w70"></div>
+                    <div class="mock-line w85"></div>
+                    <div class="mock-divider"></div>
+                    <div class="mock-line w50"></div>
+                    <div class="mock-line w40"></div>
+                </div>
+                <span class="template-icon">{{t.icon}}</span>
             </div>
-            <div class="template-card" (click)="selectTemplate('modern')">
-                <div class="template-preview modern"></div>
-                <p>Modern Creative</p>
+            <div class="template-info">
+                <h3>{{t.name}}</h3>
+                <p>{{t.desc}}</p>
             </div>
         </div>
     </div>
+</div>
 
-    <div *ngIf="templateSelected">
-        <button (click)="templateSelected = false" class="btn-back">← Change Template</button>
-
-        <div class="user-id-mock">
-            <label>Mock User ID: </label>
-            <input type="number" [(ngModel)]="userId" style="width: 50px; display: inline-block;">
-            <button (click)="loadResume()" class="btn-load">Load Data</button>
+<!-- RESUME EDITOR -->
+<div class="resume-editor" *ngIf="currentStep === 'editor'">
+    <!-- Top Bar -->
+    <div class="editor-topbar glass">
+        <button class="btn-back" (click)="goBackToTemplates()">← Templates</button>
+        <div class="template-badge" [style.borderColor]="templates[0].color">
+            Editing: <strong>{{selectedTemplate | titlecase}}</strong>
         </div>
+        <div class="topbar-actions">
+            <button class="btn-save" (click)="save()">💾 Save</button>
+                <button class="btn-tool" (click)="fillSampleData()">
+                    <span class="icon">✨</span>
+                    <div class="tool-text">
+                        <strong>Sample Data</strong>
+                        <p>Auto-fill professional content</p>
+                    </div>
+                </button>
+                <button class="btn-tool export" (click)="downloadPdf()" [disabled]="isExporting">
+                <span *ngIf="!isExporting">📄 PDF Export</span>
+                <span *ngIf="isExporting" class="spinner-sm"></span>
+            </button>
+            <button class="btn-export-sm word" (click)="downloadWord()">📝 DOCX</button>
+        </div>
+    </div>
 
-        <form (ngSubmit)="save()">
-            <section>
-                <h3>Step 2: Personal Information</h3>
-                <div class="form-group">
-                    <label>Full Name</label>
-                    <input type="text" name="name" [(ngModel)]="resume.personalInfo.name" placeholder="John Doe">
+    <!-- GitHub Sync Panel -->
+    <div class="github-sync glass" *ngIf="!githubSynced">
+        <div class="sync-content">
+            <span class="sync-icon">🔗</span>
+            <span class="sync-label">Auto-fill from GitHub</span>
+            <input type="text" [(ngModel)]="githubUsername" placeholder="Enter GitHub username" class="sync-input">
+            <button class="btn-sync" (click)="syncGithub()" [disabled]="githubLoading || !githubUsername">
+                <span *ngIf="!githubLoading">Sync</span>
+                <span *ngIf="githubLoading" class="spinner-sm"></span>
+            </button>
+        </div>
+    </div>
+    <div class="github-sync synced glass" *ngIf="githubSynced">
+        <span class="sync-icon">✅</span>
+        <span class="sync-label">GitHub synced — {{githubStats?.publicRepos}} repos, {{githubStats?.totalStars}}
+            ⭐</span>
+        <button class="btn-unsync" (click)="githubSynced = false">Change</button>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-container">
+        <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="getSectionProgress()"></div>
+        </div>
+        <span class="progress-label">{{getSectionProgress()}}% Complete</span>
+    </div>
+
+    <div class="editor-layout">
+        <!-- Sidebar Navigation -->
+        <nav class="section-nav glass">
+            <div class="nav-item" *ngFor="let sec of sections" [class.active]="activeSection === sec.id"
+                [class.required]="sec.required" (click)="goToSection(sec.id)">
+                <span class="nav-icon">{{sec.icon}}</span>
+                <span class="nav-label">{{sec.label}}</span>
+                <span class="req-dot" *ngIf="sec.required"></span>
+            </div>
+        </nav>
+
+        <!-- Form Editor (Middle Column) -->
+        <div class="form-content glass">
+
+            <!-- PERSONAL INFO -->
+            <div class="section-pane" *ngIf="activeSection === 'personal'">
+                <h2 class="section-heading">👤 Personal Information</h2>
+                <p class="section-desc">Your contact information and professional summary.</p>
+
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label>Full Name *</label>
+                        <input type="text" [(ngModel)]="resume.personalInfo.fullName" placeholder="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label>Professional Title *</label>
+                        <input type="text" [(ngModel)]="resume.personalInfo.jobTitle"
+                            placeholder="Full Stack Developer">
+                    </div>
+                    <div class="form-group">
+                        <label>Email *</label>
+                        <input type="email" [(ngModel)]="resume.personalInfo.email" placeholder="john@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="tel" [(ngModel)]="resume.personalInfo.phone" placeholder="+91 98765 43210">
+                    </div>
+                    <div class="form-group">
+                        <label>Location</label>
+                        <input type="text" [(ngModel)]="resume.personalInfo.location" placeholder="Chennai, Tamil Nadu">
+                    </div>
+                    <div class="form-group">
+                        <label>LinkedIn URL</label>
+                        <input type="url" [(ngModel)]="resume.personalInfo.linkedin"
+                            placeholder="linkedin.com/in/johndoe">
+                    </div>
+                    <div class="form-group">
+                        <label>GitHub URL</label>
+                        <input type="url" [(ngModel)]="resume.personalInfo.github" placeholder="github.com/johndoe">
+                    </div>
+                    <div class="form-group">
+                        <label>Portfolio URL</label>
+                        <input type="url" [(ngModel)]="resume.personalInfo.portfolio" placeholder="johndoe.dev">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" name="email" [(ngModel)]="resume.personalInfo.email"
-                        placeholder="john@example.com">
-                </div>
-            </section>
-
-            <section>
-                <h3>Step 3: Experience</h3>
-                <div *ngFor="let exp of resume.experience; let i = index" class="entry">
-                    <input type="text" placeholder="Company" [(ngModel)]="exp.company" [name]="'company' + i">
-                    <input type="text" placeholder="Role" [(ngModel)]="exp.role" [name]="'role' + i">
-                    <textarea placeholder="Description" [(ngModel)]="exp.desc" [name]="'desc' + i"></textarea>
-                    <button type="button" (click)="removeExperience(i)" class="btn-remove"
-                        *ngIf="resume.experience.length > 1">Remove</button>
-                </div>
-                <button type="button" (click)="addExperience()" class="btn-add">Add Experience +</button>
-            </section>
-
-            <section>
-                <h3>Step 4: Skills</h3>
-                <p class="hint">Enter skills separated by commas</p>
-                <input type="text" name="skills" [(ngModel)]="skillString" (change)="updateSkills()"
-                    placeholder="Angular, Node.js, MySQL...">
-            </section>
-
-            <div class="actions">
-                <button type="submit" class="btn-save">Save Changes</button>
-                <div class="export-actions">
-                    <button type="button" (click)="downloadPdf()" class="btn-export pdf">Download PDF</button>
-                    <button type="button" (click)="downloadWord()" class="btn-export word">Download Word</button>
+                <div class="form-group full-width">
+                    <label>Professional Summary *</label>
+                    <textarea [(ngModel)]="resume.personalInfo.summary" rows="4"
+                        placeholder="A brief 2-3 sentence summary highlighting your expertise, years of experience, and key achievements..."></textarea>
                 </div>
             </div>
-        </form>
+
+            <!-- EXPERIENCE -->
+            <div class="section-pane" *ngIf="activeSection === 'experience'">
+                <h2 class="section-heading">💼 Work Experience</h2>
+                <p class="section-desc">Add your professional work history, most recent first.</p>
+
+                <div class="entry-card" *ngFor="let exp of resume.experience; let i = index; trackBy: trackByIndex">
+                    <div class="entry-header">
+                        <span class="entry-num">{{i + 1}}</span>
+                        <button class="btn-remove" (click)="removeExperience(i)"
+                            *ngIf="resume.experience.length > 1">✕</button>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Company *</label>
+                            <input type="text" [(ngModel)]="exp.company" [name]="'company' + i"
+                                placeholder="Google Inc.">
+                        </div>
+                        <div class="form-group">
+                            <label>Role / Title *</label>
+                            <input type="text" [(ngModel)]="exp.role" [name]="'role' + i"
+                                placeholder="Senior Software Engineer">
+                        </div>
+                        <div class="form-group">
+                            <label>Location</label>
+                            <input type="text" [(ngModel)]="exp.location" [name]="'loc' + i"
+                                placeholder="Bangalore, India">
+                        </div>
+                        <div class="form-group date-row">
+                            <div>
+                                <label>Start Date</label>
+                                <input type="month" [(ngModel)]="exp.startDate" [name]="'start' + i">
+                            </div>
+                            <div *ngIf="!exp.current">
+                                <label>End Date</label>
+                                <input type="month" [(ngModel)]="exp.endDate" [name]="'end' + i">
+                            </div>
+                            <label class="checkbox-label">
+                                <input type="checkbox" [(ngModel)]="exp.current" [name]="'current' + i"> Current Role
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea [(ngModel)]="exp.description" [name]="'desc' + i" rows="3"
+                            placeholder="Describe your responsibilities and what you worked on..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Key Achievements</label>
+                        <div class="achievements-list">
+                            <div class="achievement-row"
+                                *ngFor="let a of exp.achievements; let j = index; trackBy: trackByIndex">
+                                <span class="bullet">•</span>
+                                <input type="text" [(ngModel)]="exp.achievements[j]" [name]="'ach' + i + '_' + j"
+                                    placeholder="Increased API performance by 40% through caching strategies">
+                                <button class="btn-remove-sm" (click)="removeAchievement(exp, j)"
+                                    *ngIf="exp.achievements.length > 1">✕</button>
+                            </div>
+                            <button class="btn-add-sm" (click)="addAchievement(exp)">+ Add Achievement</button>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-add-entry" (click)="addExperience()">+ Add Another Position</button>
+            </div>
+
+            <!-- EDUCATION -->
+            <div class="section-pane" *ngIf="activeSection === 'education'">
+                <h2 class="section-heading">🎓 Education</h2>
+                <p class="section-desc">Your academic background and qualifications.</p>
+
+                <div class="entry-card" *ngFor="let edu of resume.education; let i = index; trackBy: trackByIndex">
+                    <div class="entry-header">
+                        <span class="entry-num">{{i + 1}}</span>
+                        <button class="btn-remove" (click)="removeEducation(i)"
+                            *ngIf="resume.education.length > 1">✕</button>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Institution *</label>
+                            <input type="text" [(ngModel)]="edu.institution" [name]="'inst' + i"
+                                placeholder="MIT, Stanford, IIT...">
+                        </div>
+                        <div class="form-group">
+                            <label>Degree *</label>
+                            <input type="text" [(ngModel)]="edu.degree" [name]="'degree' + i"
+                                placeholder="B.Tech, M.Sc, MBA...">
+                        </div>
+                        <div class="form-group">
+                            <label>Field of Study</label>
+                            <input type="text" [(ngModel)]="edu.field" [name]="'field' + i"
+                                placeholder="Computer Science">
+                        </div>
+                        <div class="form-group date-row">
+                            <div>
+                                <label>Start</label>
+                                <input type="month" [(ngModel)]="edu.startDate" [name]="'edustart' + i">
+                            </div>
+                            <div>
+                                <label>End</label>
+                                <input type="month" [(ngModel)]="edu.endDate" [name]="'eduend' + i">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>GPA / Score</label>
+                            <input type="text" [(ngModel)]="edu.gpa" [name]="'gpa' + i" placeholder="8.5 / 10">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Notable Achievements</label>
+                        <div class="achievements-list">
+                            <div class="achievement-row"
+                                *ngFor="let a of edu.achievements; let j = index; trackBy: trackByIndex">
+                                <span class="bullet">•</span>
+                                <input type="text" [(ngModel)]="edu.achievements[j]" [name]="'eduach' + i + '_' + j"
+                                    placeholder="Dean's List, Published Research, Hackathon Winner...">
+                                <button class="btn-remove-sm" (click)="removeEduAchievement(edu, j)"
+                                    *ngIf="edu.achievements.length > 1">✕</button>
+                            </div>
+                            <button class="btn-add-sm" (click)="addEduAchievement(edu)">+ Add Achievement</button>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-add-entry" (click)="addEducation()">+ Add Another Degree</button>
+            </div>
+
+            <!-- SKILLS -->
+            <div class="section-pane" *ngIf="activeSection === 'skills'">
+                <h2 class="section-heading">⚡ Skills</h2>
+                <p class="section-desc">Categorize your skills for better ATS parsing. Separate with commas.</p>
+
+                <div class="skill-categories">
+                    <div class="form-group">
+                        <label>🔧 Technical / Programming</label>
+                        <input type="text" [(ngModel)]="technicalSkillString" (change)="updateSkills()"
+                            placeholder="JavaScript, Python, Java, C++, SQL...">
+                        <div class="skill-preview" *ngIf="resume.skills.technical.length">
+                            <span class="skill-pill tech" *ngFor="let s of resume.skills.technical">{{s}}</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>📦 Frameworks & Libraries</label>
+                        <input type="text" [(ngModel)]="frameworkSkillString" (change)="updateSkills()"
+                            placeholder="Angular, React, Node.js, Spring Boot, Express...">
+                        <div class="skill-preview" *ngIf="resume.skills.frameworks.length">
+                            <span class="skill-pill framework" *ngFor="let s of resume.skills.frameworks">{{s}}</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>🛠️ Tools & Platforms</label>
+                        <input type="text" [(ngModel)]="toolSkillString" (change)="updateSkills()"
+                            placeholder="Git, Docker, AWS, Figma, VS Code, Jira...">
+                        <div class="skill-preview" *ngIf="resume.skills.tools.length">
+                            <span class="skill-pill tool" *ngFor="let s of resume.skills.tools">{{s}}</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>🤝 Soft Skills</label>
+                        <input type="text" [(ngModel)]="softSkillString" (change)="updateSkills()"
+                            placeholder="Leadership, Communication, Problem Solving, Agile...">
+                        <div class="skill-preview" *ngIf="resume.skills.soft.length">
+                            <span class="skill-pill soft" *ngFor="let s of resume.skills.soft">{{s}}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PROJECTS -->
+            <div class="section-pane" *ngIf="activeSection === 'projects'">
+                <h2 class="section-heading">🛠️ Projects</h2>
+                <p class="section-desc">Showcase your best work with links and tech stacks.</p>
+
+                <div class="entry-card" *ngFor="let proj of resume.projects; let i = index; trackBy: trackByIndex">
+                    <div class="entry-header">
+                        <span class="entry-num">{{i + 1}}</span>
+                        <button class="btn-remove" (click)="removeProject(i)"
+                            *ngIf="resume.projects.length > 1">✕</button>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Project Name *</label>
+                            <input type="text" [(ngModel)]="proj.name" [name]="'projname' + i"
+                                placeholder="E-Commerce Platform">
+                        </div>
+                        <div class="form-group">
+                            <label>Tech Stack</label>
+                            <input type="text" [(ngModel)]="proj.techStack" [name]="'projtech' + i"
+                                placeholder="React, Node.js, MongoDB">
+                        </div>
+                        <div class="form-group">
+                            <label>Live URL</label>
+                            <input type="url" [(ngModel)]="proj.liveUrl" [name]="'projlive' + i"
+                                placeholder="https://myproject.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Repository URL</label>
+                            <input type="url" [(ngModel)]="proj.repoUrl" [name]="'projrepo' + i"
+                                placeholder="https://github.com/user/repo">
+                        </div>
+                        <div class="form-group date-row">
+                            <div>
+                                <label>Start Date</label>
+                                <input type="month" [(ngModel)]="proj.startDate" [name]="'projstart' + i">
+                            </div>
+                            <div>
+                                <label>End Date</label>
+                                <input type="month" [(ngModel)]="proj.endDate" [name]="'projend' + i">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea [(ngModel)]="proj.description" [name]="'projdesc' + i" rows="3"
+                            placeholder="What does it do? What problem does it solve? Key features..."></textarea>
+                    </div>
+                </div>
+                <button class="btn-add-entry" (click)="addProject()">+ Add Another Project</button>
+            </div>
+
+            <!-- CERTIFICATIONS -->
+            <div class="section-pane" *ngIf="activeSection === 'certifications'">
+                <h2 class="section-heading">📜 Certifications</h2>
+                <p class="section-desc">Professional certifications and credentials.</p>
+
+                <div class="entry-card"
+                    *ngFor="let cert of resume.certifications; let i = index; trackBy: trackByIndex">
+                    <div class="entry-header">
+                        <span class="entry-num">{{i + 1}}</span>
+                        <button class="btn-remove" (click)="removeCertification(i)"
+                            *ngIf="resume.certifications.length > 1">✕</button>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Certification Name *</label>
+                            <input type="text" [(ngModel)]="cert.name" [name]="'certname' + i"
+                                placeholder="AWS Solutions Architect">
+                        </div>
+                        <div class="form-group">
+                            <label>Issuing Organization</label>
+                            <input type="text" [(ngModel)]="cert.issuer" [name]="'certissuer' + i"
+                                placeholder="Amazon Web Services">
+                        </div>
+                        <div class="form-group">
+                            <label>Date Earned</label>
+                            <input type="month" [(ngModel)]="cert.date" [name]="'certdate' + i">
+                        </div>
+                        <div class="form-group">
+                            <label>Credential URL</label>
+                            <input type="url" [(ngModel)]="cert.credentialUrl" [name]="'certurl' + i"
+                                placeholder="https://credential.net/...">
+                        </div>
+                    </div>
+                </div>
+                <button class="btn-add-entry" (click)="addCertification()">+ Add Another Certification</button>
+            </div>
+
+            <!-- LANGUAGES -->
+            <div class="section-pane" *ngIf="activeSection === 'languages'">
+                <h2 class="section-heading">🌍 Languages</h2>
+                <p class="section-desc">Languages you speak and their proficiency level.</p>
+
+                <div class="entry-card compact"
+                    *ngFor="let lang of resume.languages; let i = index; trackBy: trackByIndex">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Language</label>
+                            <input type="text" [(ngModel)]="lang.language" [name]="'lang' + i"
+                                placeholder="English, Hindi, Tamil...">
+                        </div>
+                        <div class="form-group">
+                            <label>Proficiency</label>
+                            <select [(ngModel)]="lang.proficiency" [name]="'langprof' + i">
+                                <option value="Native">Native</option>
+                                <option value="Fluent">Fluent</option>
+                                <option value="Professional">Professional</option>
+                                <option value="Intermediate">Intermediate</option>
+                                <option value="Basic">Basic</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn-remove-inline" (click)="removeLanguage(i)"
+                        *ngIf="resume.languages.length > 1">Remove</button>
+                </div>
+                <button class="btn-add-entry" (click)="addLanguage()">+ Add Language</button>
+            </div>
+
+            <!-- AWARDS -->
+            <div class="section-pane" *ngIf="activeSection === 'awards'">
+                <h2 class="section-heading">🏆 Awards & Honors</h2>
+                <p class="section-desc">Recognition you've received for your work.</p>
+
+                <div class="entry-card" *ngFor="let award of resume.awards; let i = index; trackBy: trackByIndex">
+                    <div class="entry-header">
+                        <span class="entry-num">{{i + 1}}</span>
+                        <button class="btn-remove" (click)="removeAward(i)" *ngIf="resume.awards.length > 1">✕</button>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label>Award Title *</label>
+                            <input type="text" [(ngModel)]="award.title" [name]="'awardtitle' + i"
+                                placeholder="Employee of the Year">
+                        </div>
+                        <div class="form-group">
+                            <label>Issuing Organization</label>
+                            <input type="text" [(ngModel)]="award.issuer" [name]="'awardissuer' + i"
+                                placeholder="Company / Organization">
+                        </div>
+                        <div class="form-group">
+                            <label>Date</label>
+                            <input type="month" [(ngModel)]="award.date" [name]="'awarddate' + i">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea [(ngModel)]="award.description" [name]="'awarddesc' + i" rows="2"
+                            placeholder="Brief description of the award..."></textarea>
+                    </div>
+                </div>
+                <button class="btn-add-entry" (click)="addAward()">+ Add Another Award</button>
+            </div>
+        </div>
+
+    <!-- Live Preview Pane (Right Column) -->
+    <div class="preview-pane glass">
+        <div class="preview-toolbar">
+            <span class="toolbar-label">Live Preview (A4)</span>
+            <div class="zoom-controls">
+                <button class="btn-zoom" (click)="zoomLevel = zoomLevel - 10" [disabled]="zoomLevel <= 30">➖</button>
+                <span class="zoom-level">{{zoomLevel}}%</span>
+                <button class="btn-zoom" (click)="zoomLevel = zoomLevel + 10" [disabled]="zoomLevel >= 150">➕</button>
+            </div>
+        </div>
+
+        <!-- THE ACTUAL A4 RESUME CONTAINER -->
+        <div class="resume-a4-wrapper" id="resume-to-export">
+            <div class="resume-a4" [ngClass]="selectedTemplate" [style.transform]="'scale(' + (zoomLevel / 200) + ')'">
+
+                <!-- CLASSIC TEMPLATE -->
+                <div *ngIf="selectedTemplate === 'classic'" class="classic-tpl">
+                    <header class="tpl-header">
+                        <h1 class="tpl-name">{{resume.personalInfo.fullName || 'YOUR NAME'}}</h1>
+                        <p class="tpl-title">{{resume.personalInfo.jobTitle || 'Professional Title'}}</p>
+                        <div class="tpl-contact">
+                            <span>{{resume.personalInfo.email}}</span>
+                            <span *ngIf="resume.personalInfo.phone"> • {{resume.personalInfo.phone}}</span>
+                            <span *ngIf="resume.personalInfo.location"> • {{resume.personalInfo.location}}</span>
+                        </div>
+                        <div class="tpl-socials" *ngIf="resume.personalInfo.linkedin || resume.personalInfo.github || resume.personalInfo.portfolio">
+                            <span *ngIf="resume.personalInfo.linkedin">LinkedIn: {{resume.personalInfo.linkedin}}</span>
+                            <span *ngIf="resume.personalInfo.github"> • GitHub: {{resume.personalInfo.github}}</span>
+                            <span *ngIf="resume.personalInfo.portfolio"> • Portfolio: {{resume.personalInfo.portfolio}}</span>
+                        </div>
+                    </header>
+
+                    <div class="tpl-body">
+                        <section class="tpl-section" *ngIf="resume.personalInfo.summary">
+                            <h2 class="tpl-section-title">Professional Summary</h2>
+                            <p class="tpl-summary">{{resume.personalInfo.summary}}</p>
+                        </section>
+
+                        <section class="tpl-section" *ngIf="resume.experience.length > 0 && resume.experience[0].company">
+                            <h2 class="tpl-section-title">Work Experience</h2>
+                            <div class="tpl-entry" *ngFor="let exp of resume.experience">
+                                <div class="tpl-entry-head">
+                                    <strong>{{exp.role}}</strong>
+                                    <span>{{exp.startDate}} - {{exp.endDate || (exp.current ? 'Present' : '')}}</span>
+                                </div>
+                                <div class="tpl-entry-sub">
+                                    <span>{{exp.company}}</span><span *ngIf="exp.location">, <i>{{exp.location}}</i></span>
+                                </div>
+                                <p class="exp-desc" *ngIf="exp.description">{{exp.description}}</p>
+                                <ul class="tpl-list" *ngIf="exp.achievements?.length && exp.achievements[0]">
+                                    <li *ngFor="let ach of exp.achievements">{{ach}}</li>
+                                </ul>
+                            </div>
+                        </section>
+
+                        <section class="tpl-section" *ngIf="resume.education.length > 0 && resume.education[0].institution">
+                            <h2 class="tpl-section-title">Education</h2>
+                            <div class="tpl-entry" *ngFor="let edu of resume.education">
+                                <div class="tpl-entry-head">
+                                    <strong>{{edu.degree}}<span *ngIf="edu.field"> in {{edu.field}}</span></strong>
+                                    <span>{{edu.startDate}} - {{edu.endDate}}</span>
+                                </div>
+                                <div class="tpl-entry-sub">
+                                    <span>{{edu.institution}}</span>
+                                    <span class="edu-gpa" *ngIf="edu.gpa"> • GPA: {{edu.gpa}}</span>
+                                </div>
+                                <ul class="tpl-list" *ngIf="edu.achievements?.length && edu.achievements[0]">
+                                    <li *ngFor="let ach of edu.achievements">{{ach}}</li>
+                                </ul>
+                            </div>
+                        </section>
+
+                        <section class="tpl-section" *ngIf="resume.projects.length > 0 && resume.projects[0].name">
+                            <h2 class="tpl-section-title">Projects</h2>
+                            <div class="tpl-entry" *ngFor="let p of resume.projects">
+                                <div class="tpl-entry-head">
+                                    <strong>{{p.name}}</strong>
+                                    <span>{{p.startDate}} <span *ngIf="p.endDate">- {{p.endDate}}</span></span>
+                                </div>
+                                <div class="p-links" *ngIf="p.liveUrl || p.repoUrl">
+                                    <span *ngIf="p.liveUrl">Live: {{p.liveUrl}}</span>
+                                    <span *ngIf="p.repoUrl"> • Repo: {{p.repoUrl}}</span>
+                                </div>
+                                <p class="p-stack" *ngIf="p.techStack"><strong>Stack:</strong> {{p.techStack}}</p>
+                                <p class="p-desc">{{p.description}}</p>
+                            </div>
+                        </section>
+
+                        <section class="tpl-section" *ngIf="resume.awards?.length > 0 && resume.awards[0].title">
+                            <h2 class="tpl-section-title">Awards & Honors</h2>
+                            <div class="tpl-entry" *ngFor="let award of resume.awards">
+                                <div class="tpl-entry-head">
+                                    <strong>{{award.title}}</strong>
+                                    <span>{{award.date}}</span>
+                                </div>
+                                <div class="tpl-entry-sub">{{award.issuer}}</div>
+                                <p class="award-desc" *ngIf="award.description">{{award.description}}</p>
+                            </div>
+                        </section>
+
+                        <section class="tpl-section" *ngIf="resume.certifications.length > 0 && resume.certifications[0].name">
+                            <h2 class="tpl-section-title">Certifications</h2>
+                            <div class="tpl-entry" *ngFor="let cert of resume.certifications">
+                                <div class="tpl-entry-head">
+                                    <strong>{{cert.name}}</strong>
+                                    <span>{{cert.date}}</span>
+                                </div>
+                                <div class="tpl-entry-sub">
+                                    {{cert.issuer}}
+                                    <span class="cert-link" *ngIf="cert.credentialUrl"> • <a [href]="cert.credentialUrl" target="_blank">View Credential</a></span>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="tpl-section" *ngIf="resume.languages?.length > 0 && resume.languages[0].language">
+                            <h2 class="tpl-section-title">Languages</h2>
+                            <div class="tpl-languages">
+                                <span *ngFor="let lang of resume.languages; let last = last">
+                                    {{lang.language}} ({{lang.proficiency}})<span *ngIf="!last">, </span>
+                                </span>
+                            </div>
+                        </section>
+
+                        <section class="tpl-section"
+                            *ngIf="resume.skills.technical.length || resume.skills.frameworks.length || resume.skills.tools.length || resume.skills.soft.length">
+                            <h2 class="tpl-section-title">Skills</h2>
+                            <div class="tpl-skills-detailed">
+                                <div class="skill-row" *ngIf="resume.skills.technical.length">
+                                    <strong>Languages:</strong> {{resume.skills.technical.join(', ')}}
+                                </div>
+                                <div class="skill-row" *ngIf="resume.skills.frameworks.length">
+                                    <strong>Frameworks:</strong> {{resume.skills.frameworks.join(', ')}}
+                                </div>
+                                <div class="skill-row" *ngIf="resume.skills.tools.length">
+                                    <strong>Tools:</strong> {{resume.skills.tools.join(', ')}}
+                                </div>
+                                <div class="skill-row" *ngIf="resume.skills.soft.length">
+                                    <strong>Soft Skills:</strong> {{resume.skills.soft.join(', ')}}
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+
+                <!-- MODERN TEMPLATE -->
+                <div *ngIf="selectedTemplate === 'modern'" class="modern-tpl">
+                    <div class="modern-sidebar" [style.background]="templates[1].color">
+                        <div class="modern-avatar">{{resume.personalInfo.fullName?.charAt(0)}}</div>
+                        
+                        <div class="modern-side-section">
+                            <h3>Contact</h3>
+                            <p class="side-item"><span class="icon">📧</span> {{resume.personalInfo.email}}</p>
+                            <p class="side-item" *ngIf="resume.personalInfo.phone"><span class="icon">📞</span> {{resume.personalInfo.phone}}</p>
+                            <p class="side-item" *ngIf="resume.personalInfo.location"><span class="icon">📍</span> {{resume.personalInfo.location}}</p>
+                        </div>
+
+                        <div class="modern-side-section" *ngIf="resume.personalInfo.linkedin || resume.personalInfo.github || resume.personalInfo.portfolio">
+                            <h3>Socials</h3>
+                            <p class="side-item" *ngIf="resume.personalInfo.linkedin">LinkedIn: {{resume.personalInfo.linkedin}}</p>
+                            <p class="side-item" *ngIf="resume.personalInfo.github">GitHub: {{resume.personalInfo.github}}</p>
+                            <p class="side-item" *ngIf="resume.personalInfo.portfolio">Web: {{resume.personalInfo.portfolio}}</p>
+                        </div>
+
+                        <div class="modern-side-section" *ngIf="resume.skills.technical.length || resume.skills.frameworks.length">
+                            <h3>Skills</h3>
+                            <div class="skill-group" *ngIf="resume.skills.technical.length">
+                                <h4>Technical</h4>
+                                <div class="modern-skill-tag" *ngFor="let s of resume.skills.technical">{{s}}</div>
+                            </div>
+                            <div class="skill-group" *ngIf="resume.skills.frameworks.length">
+                                <h4>Frameworks</h4>
+                                <div class="modern-skill-tag" *ngFor="let s of resume.skills.frameworks">{{s}}</div>
+                            </div>
+                            <div class="skill-group" *ngIf="resume.skills.tools.length">
+                                <h4>Tools</h4>
+                                <div class="modern-skill-tag" *ngFor="let s of resume.skills.tools">{{s}}</div>
+                            </div>
+                        </div>
+
+                        <div class="modern-side-section" *ngIf="resume.education.length > 0 && resume.education[0].institution">
+                            <h3>Education</h3>
+                            <div class="edu-side" *ngFor="let e of resume.education">
+                                <strong>{{e.degree}}</strong>
+                                <p>{{e.institution}}</p>
+                                <span class="side-date">{{e.startDate}} - {{e.endDate}}</span>
+                                <p class="side-gpa" *ngIf="e.gpa">GPA: {{e.gpa}}</p>
+                            </div>
+                        </div>
+
+                        <div class="modern-side-section" *ngIf="resume.certifications.length > 0 && resume.certifications[0].name">
+                            <h3>Certifications</h3>
+                            <div class="cert-side" *ngFor="let c of resume.certifications">
+                                <strong>{{c.name}}</strong>
+                                <p>{{c.issuer}}</p>
+                                <a [href]="c.credentialUrl" *ngIf="c.credentialUrl" target="_blank" class="side-link">View</a>
+                            </div>
+                        </div>
+                        <div class="modern-side-section" *ngIf="resume.languages?.length > 0 && resume.languages[0].language">
+                            <h3>Languages</h3>
+                            <div class="lang-side" *ngFor="let l of resume.languages">
+                                <strong>{{l.language}}</strong>
+                                <p>{{l.proficiency}}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="modern-main">
+                        <header>
+                            <h1>{{resume.personalInfo.fullName}}</h1>
+                            <h2>{{resume.personalInfo.jobTitle}}</h2>
+                            <p class="modern-summary" *ngIf="resume.personalInfo.summary">{{resume.personalInfo.summary}}</p>
+                        </header>
+
+                        <section *ngIf="resume.experience.length > 0 && resume.experience[0].company">
+                            <h3 class="modern-section-title">Work Experience</h3>
+                            <div class="modern-entry" *ngFor="let exp of resume.experience">
+                                <div class="modern-entry-header">
+                                    <strong>{{exp.role}}</strong> @ {{exp.company}}
+                                    <span class="m-entry-loc" *ngIf="exp.location">({{exp.location}})</span>
+                                </div>
+                                <div class="modern-entry-date">{{exp.startDate}} — {{exp.endDate}}</div>
+                                <p class="m-entry-desc" *ngIf="exp.description">{{exp.description}}</p>
+                                <ul class="modern-list" *ngIf="exp.achievements?.length && exp.achievements[0]">
+                                    <li *ngFor="let a of exp.achievements">{{a}}</li>
+                                </ul>
+                            </div>
+                        </section>
+
+                        <section *ngIf="resume.projects.length > 0 && resume.projects[0].name">
+                            <h3 class="modern-section-title">Recent Projects</h3>
+                            <div class="modern-project" *ngFor="let p of resume.projects">
+                                <div class="p-head">
+                                    <strong>{{p.name}}</strong> | <span>{{p.techStack}}</span>
+                                </div>
+                                <div class="p-dates-links">
+                                    <span class="p-dates" *ngIf="p.startDate || p.endDate">{{p.startDate}} - {{p.endDate}}</span>
+                                    <span class="p-links">
+                                        <a [href]="p.liveUrl" *ngIf="p.liveUrl" target="_blank">Live</a>
+                                        <a [href]="p.repoUrl" *ngIf="p.repoUrl" target="_blank">Repo</a>
+                                    </span>
+                                </div>
+                                <p>{{p.description}}</p>
+                            </div>
+                        </section>
+
+                        <section *ngIf="resume.awards?.length > 0 && resume.awards[0].title">
+                            <h3 class="modern-section-title">Awards & Honors</h3>
+                            <div class="modern-award" *ngFor="let award of resume.awards">
+                                <div class="a-head">
+                                    <strong>{{award.title}}</strong>
+                                    <span>{{award.date}}</span>
+                                </div>
+                                <p class="a-issuer">{{award.issuer}}</p>
+                                <p class="a-desc">{{award.description}}</p>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+
+                <!-- Other templates will follow same pattern... for now demonstrating 2 major ones -->
+                <div *ngIf="['minimal', 'developer', 'executive', 'creative'].includes(selectedTemplate)"
+                    class="tpl-placeholder-msg">
+                    <span class="tpl-icon">🧪</span>
+                    <h3>{{selectedTemplate | titlecase}} Template Rendering...</h3>
+                    <p>Complete the form to see your optimized resume in this premium layout.</p>
+                </div>
+
+            </div>
+        </div>
     </div>
+</div>
 </div>

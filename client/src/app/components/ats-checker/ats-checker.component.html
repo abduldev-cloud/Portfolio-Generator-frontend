@@ -1,29 +1,38 @@
 <div class="hero-section">
-    <h1 class="glow-text">Intelligence Engine <span class="v-badge">v2.5</span></h1>
-    <p class="subtitle">Next-gen semantic analysis & strategic resume optimization</p>
+    <h1 class="glow-text">Astra Agent <span class="v-badge">v3.0</span></h1>
+    <p class="subtitle">Autonomous Career Optimization — powered by Gemini AI</p>
 </div>
 
 <div class="engine-layout">
-    <!-- Input Stage -->
+    <!-- INPUT STAGE -->
     <div class="input-card glass" *ngIf="!analysis">
         <div class="input-header">
             <div class="status-dot pulsing"></div>
-            <span>Awaiting Strategic Data</span>
+            <span>Awaiting Resume & Job Description</span>
         </div>
 
         <div class="grid-inputs">
             <div class="field-group">
-                <label><i class="icon-resume"></i> Target Resume</label>
+                <div class="field-header">
+                    <label>📄 Resume Text</label>
+                    <div class="header-actions">
+                        <label for="resume-upload" class="btn-upload-sm" [class.loading]="parsing">
+                            <span *ngIf="!parsing">📁 Upload Resume (PDF/DOCX)</span>
+                            <span *ngIf="parsing" class="spinner-sm"></span>
+                        </label>
+                        <input type="file" id="resume-upload" (change)="onFileSelected($event)" accept=".pdf,.doc,.docx" hidden>
+                    </div>
+                </div>
                 <div class="textarea-wrapper">
-                    <textarea [(ngModel)]="resumeText" placeholder="Paste your career history..." rows="12"></textarea>
+                    <textarea [(ngModel)]="resumeText" placeholder="Paste your full resume here..."
+                        rows="12"></textarea>
                     <div class="line-accents"></div>
                 </div>
             </div>
-
             <div class="field-group">
-                <label><i class="icon-jd"></i> Job Description</label>
+                <label>💼 Job Description</label>
                 <div class="textarea-wrapper">
-                    <textarea [(ngModel)]="jobDescription" placeholder="Paste the target role details..."
+                    <textarea [(ngModel)]="jobDescription" placeholder="Paste the target job description..."
                         rows="12"></textarea>
                     <div class="line-accents"></div>
                 </div>
@@ -32,136 +41,227 @@
 
         <div class="action-footer">
             <button (click)="checkScore()" class="btn-primary-glow" [disabled]="loading">
-                <span *ngIf="!loading">Initialize Deep Analysis</span>
+                <span *ngIf="!loading">🚀 Launch Agent Analysis</span>
                 <span *ngIf="loading" class="loading-state">
-                    <span class="spinner"></span> Orchestrating Intelligence...
+                    <span class="spinner"></span> Agent is executing tools...
                 </span>
             </button>
         </div>
     </div>
 
-    <!-- Analysis Dashboard -->
+    <!-- AGENT DASHBOARD -->
     <div class="analysis-dashboard" *ngIf="analysis">
         <header class="dashboard-header">
-            <button (click)="reset()" class="btn-back">
-                <span class="arrow">←</span> New Analysis
-            </button>
+            <button (click)="reset()" class="btn-back">← New Analysis</button>
             <div class="badge-row">
-                <span class="status-pill green">Analysis Complete</span>
-                <span class="status-pill blue">Gemini 2.5 Logic</span>
+                <span class="status-pill green">✅ Agent Complete</span>
+                <span class="status-pill blue">{{analysis.steps_executed?.length || 0}} Tools Executed</span>
             </div>
         </header>
 
-        <div class="executive-summary glass">
-            <div class="summary-icon">💡</div>
-            <div class="summary-text">
-                <h3>Strategic Evaluation</h3>
-                <p>{{analysis.executive_summary}}</p>
+        <!-- AGENT EXECUTION PLAN -->
+        <div class="plan-section glass">
+            <h3 class="section-title">🧠 Agent Execution Plan</h3>
+            <div class="plan-steps">
+                <div class="plan-step" *ngFor="let step of analysis.plan; let i = index">
+                    <span class="step-number">{{i + 1}}</span>
+                    <span class="step-text">{{step}}</span>
+                    <span class="step-check">✅</span>
+                </div>
             </div>
         </div>
 
-        <!-- Main Data Grid -->
-        <div class="data-grid">
-            <!-- Score Circle -->
-            <div class="score-card glass glass-hover">
+        <!-- CANDIDATE + SCORE -->
+        <div class="candidate-banner glass">
+            <div class="candidate-info">
+                <h2>{{resumeData.candidate_name || 'Candidate'}}</h2>
+                <p class="candidate-title">{{resumeData.professional_title || 'Professional'}}</p>
+                <span class="exp-badge">{{resumeData.years_of_experience || '0'}} years experience</span>
+            </div>
+            <div class="score-section">
                 <div class="gauge-container">
                     <svg viewBox="0 0 100 100" class="gauge-svg">
                         <circle cx="50" cy="50" r="45" class="gauge-track"></circle>
                         <circle cx="50" cy="50" r="45" class="gauge-fill"
-                            [style.stroke-dashoffset]="283 - (283 * analysis.ats_report.overall_score / 100)"></circle>
+                            [style.stroke-dashoffset]="283 - (283 * overallScore / 100)"></circle>
                     </svg>
                     <div class="gauge-content">
-                        <span class="score-num">{{analysis.ats_report.overall_score}}</span>
-                        <span class="score-label">Match %</span>
+                        <span class="score-num">{{overallScore}}</span>
+                        <span class="score-label">ATS Score</span>
                     </div>
                 </div>
-                <div class="hiring-tag {{analysis.ats_report.hiring_probability_band?.toLowerCase()}}">
-                    Probability: {{analysis.ats_report.hiring_probability_band}}
-                </div>
+                <div class="hiring-tag" [ngClass]="hiringBandClass">{{hiringBand}}</div>
             </div>
+        </div>
 
-            <!-- Skill Gap Map -->
-            <div class="gap-card glass glass-hover">
-                <div class="card-title">Critical Skill Alignments</div>
-                <div class="skill-tags">
-                    <span class="skill-tag"
-                        *ngFor="let skill of analysis.skill_gap_analysis?.missing_high_priority_skills">
-                        {{skill}}
-                    </span>
+        <!-- EXECUTIVE SUMMARY -->
+        <div class="executive-summary glass">
+            <div class="summary-icon">💡</div>
+            <div class="summary-text">
+                <h3>Executive Summary</h3>
+                <p>{{analysis.final_analysis?.executive_summary}}</p>
+            </div>
+        </div>
+
+        <!-- SCORE BREAKDOWN -->
+        <div class="score-grid">
+            <div class="metric-card glass glass-hover">
+                <div class="metric-label">Skill Match</div>
+                <div class="metric-bar">
+                    <div class="bar-fill skill" [style.width.%]="matchData.skill_match_percentage || 0"></div>
                 </div>
-                <div class="expectations mt-4">
-                    <div class="sub-label">Hidden Recruiter Intent</div>
-                    <ul class="intent-list">
-                        <li *ngFor="let item of analysis.ats_report?.hidden_expectations">{{item}}</li>
-                    </ul>
+                <div class="metric-value">{{matchData.skill_match_percentage || 0}}%</div>
+            </div>
+            <div class="metric-card glass glass-hover">
+                <div class="metric-label">Domain Fit</div>
+                <div class="metric-bar">
+                    <div class="bar-fill domain" [style.width.%]="matchData.domain_fit_score || 0"></div>
+                </div>
+                <div class="metric-value">{{matchData.domain_fit_score || 0}}%</div>
+            </div>
+            <div class="metric-card glass glass-hover">
+                <div class="metric-label">Experience Fit</div>
+                <div class="metric-bar">
+                    <div class="bar-fill experience" [style.width.%]="matchData.experience_alignment || 0"></div>
+                </div>
+                <div class="metric-value">{{matchData.experience_alignment || 0}}%</div>
+            </div>
+        </div>
+
+        <!-- SKILL MAP -->
+        <div class="skills-section glass">
+            <h3 class="section-title">Skill Alignment Map</h3>
+            <div class="skills-grid">
+                <div class="skill-column">
+                    <div class="col-label matched">✅ Matched</div>
+                    <div class="skill-tags">
+                        <span class="skill-tag green" *ngFor="let s of matchData.matched_skills">{{s}}</span>
+                        <span class="empty-state" *ngIf="!matchData.matched_skills?.length">None found</span>
+                    </div>
+                </div>
+                <div class="skill-column">
+                    <div class="col-label partial">⚡ Partial</div>
+                    <div class="skill-tags">
+                        <span class="skill-tag yellow" *ngFor="let s of matchData.partially_matched_skills">{{s}}</span>
+                        <span class="empty-state" *ngIf="!matchData.partially_matched_skills?.length">None</span>
+                    </div>
+                </div>
+                <div class="skill-column">
+                    <div class="col-label missing">❌ Missing</div>
+                    <div class="skill-tags">
+                        <span class="skill-tag red" *ngFor="let s of matchData.missing_skills">{{s}}</span>
+                        <span class="empty-state" *ngIf="!matchData.missing_skills?.length">All covered!</span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Advanced Strategy Tabs -->
+        <!-- TABBED DEEP ANALYSIS -->
         <div class="strategy-tabs glass">
             <nav class="tabs-nav">
-                <button [class.active]="activeTab === 'roadmap'" (click)="activeTab = 'roadmap'">Optimization
-                    Plan</button>
-                <button [class.active]="activeTab === 'resume'" (click)="activeTab = 'resume'">Rewritten Resume</button>
-                <button [class.active]="activeTab === 'branding'" (click)="activeTab = 'branding'">Personal
-                    Brand</button>
+                <button [class.active]="activeTab === 'overview'" (click)="activeTab = 'overview'">📋 Overview</button>
+                <button [class.active]="activeTab === 'gaps'" (click)="activeTab = 'gaps'">🎯 Gaps & Strengths</button>
+                <button [class.active]="activeTab === 'resume'" (click)="activeTab = 'resume'">📝 Optimized
+                    Resume</button>
+                <button [class.active]="activeTab === 'strategy'" (click)="activeTab = 'strategy'">🏷️ Career
+                    Strategy</button>
             </nav>
 
             <div class="tab-body">
-                <!-- Roadmap -->
-                <div class="tab-pane animate-fade" *ngIf="activeTab === 'roadmap'">
-                    <div class="roadmap-grid">
-                        <div class="steps">
-                            <h4>Actionable Roadmap</h4>
-                            <div class="step-item"
-                                *ngFor="let step of analysis.optimization_roadmap?.improvement_steps; let i = index">
-                                <span class="step-num">{{i + 1}}</span>
-                                <p>{{step}}</p>
+                <!-- OVERVIEW -->
+                <div class="tab-pane animate-fade" *ngIf="activeTab === 'overview'">
+                    <div class="overview-grid">
+                        <div class="overview-section">
+                            <h4>🎓 Education</h4>
+                            <div class="info-item" *ngFor="let edu of resumeData.education">
+                                <strong>{{edu.degree}}</strong> — {{edu.institution}} ({{edu.year}})
                             </div>
+                            <div class="empty-state" *ngIf="!resumeData.education?.length">Not detected</div>
                         </div>
-                        <div class="bullets">
-                            <h4>Bullet Point Upgrades</h4>
-                            <div class="bullet-suggestion"
-                                *ngFor="let bullet of analysis.optimization_roadmap?.bullet_suggestions">
-                                {{bullet}}
+                        <div class="overview-section">
+                            <h4>🔧 Technical Skills</h4>
+                            <div class="skill-tags">
+                                <span class="skill-tag blue" *ngFor="let s of resumeData.technical_skills">{{s}}</span>
                             </div>
+                            <div class="empty-state" *ngIf="!resumeData.technical_skills?.length">Not detected</div>
+                        </div>
+                        <div class="overview-section">
+                            <h4>📌 JD Required Skills</h4>
+                            <div class="skill-tags">
+                                <span class="skill-tag outline" *ngFor="let s of jobData.required_skills">{{s}}</span>
+                            </div>
+                            <div class="empty-state" *ngIf="!jobData.required_skills?.length">Not detected</div>
+                        </div>
+                        <div class="overview-section">
+                            <h4>🔮 Hidden Expectations</h4>
+                            <ul class="clean-list">
+                                <li *ngFor="let h of jobData.hidden_expectations">{{h}}</li>
+                            </ul>
+                            <div class="empty-state" *ngIf="!jobData.hidden_expectations?.length">None inferred</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Rewritten Resume -->
+                <!-- GAPS & STRENGTHS -->
+                <div class="tab-pane animate-fade" *ngIf="activeTab === 'gaps'">
+                    <div class="gap-grid">
+                        <div class="gap-section strengths">
+                            <h4>💪 Key Strengths</h4>
+                            <ul class="clean-list">
+                                <li *ngFor="let s of analysis.final_analysis?.key_strengths">{{s}}</li>
+                            </ul>
+                            <div class="empty-state" *ngIf="!analysis.final_analysis?.key_strengths?.length">None
+                                identified</div>
+                        </div>
+                        <div class="gap-section critical">
+                            <h4>🚨 Critical Gaps</h4>
+                            <div class="gap-tags">
+                                <span class="gap-tag"
+                                    *ngFor="let g of analysis.final_analysis?.critical_gaps">{{g}}</span>
+                            </div>
+                            <div class="empty-state" *ngIf="!analysis.final_analysis?.critical_gaps?.length">No critical
+                                gaps!</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- OPTIMIZED RESUME -->
                 <div class="tab-pane animate-fade" *ngIf="activeTab === 'resume'">
                     <div class="code-utility-header">
-                        <span>Tailored JSON / PDF Source</span>
-                        <button class="btn-copy-mini" (click)="copyToClipboard(analysis.rewritten_resume)">Copy
-                            Content</button>
+                        <span>ATS-Optimized Resume</span>
+                        <button class="btn-copy-mini" (click)="copyToClipboard(analysis.optimized_resume)">📋 Copy to
+                            Clipboard</button>
                     </div>
                     <div class="code-editor">
-                        <pre>{{analysis.rewritten_resume}}</pre>
+                        <pre>{{analysis.optimized_resume}}</pre>
                     </div>
                 </div>
 
-                <!-- Branding -->
-                <div class="tab-pane animate-fade" *ngIf="activeTab === 'branding'">
-                    <div class="branding-hero">
+                <!-- CAREER STRATEGY -->
+                <div class="tab-pane animate-fade" *ngIf="activeTab === 'strategy'">
+                    <div class="brand-hero">
                         <div class="brand-badge">PRO</div>
-                        <h2>{{analysis.branding_strategy?.optimized_headline}}</h2>
-                        <p class="brand-tagline">{{analysis.branding_strategy?.positioning_statement}}</p>
+                        <h2>{{analysis.career_strategy?.improved_headline}}</h2>
+                        <p class="brand-tagline">{{analysis.career_strategy?.positioning_statement}}</p>
                     </div>
-                    <div class="suggestions-grid">
-                        <div class="suggest-box">
-                            <label>Ideal Roles</label>
-                            <div class="tags">
-                                <span class="tag-outline"
-                                    *ngFor="let role of analysis.branding_strategy?.ideal_target_roles">{{role}}</span>
+                    <div class="brand-grid">
+                        <div class="brand-section">
+                            <h4>🎯 Recommended Roles</h4>
+                            <div class="skill-tags">
+                                <span class="skill-tag outline"
+                                    *ngFor="let r of analysis.career_strategy?.recommended_roles">{{r}}</span>
                             </div>
                         </div>
-                        <div class="suggest-box">
-                            <label>Portfolio Content Upgrades</label>
+                        <div class="brand-section">
+                            <h4>💼 Portfolio Project Ideas</h4>
                             <ul class="clean-list">
-                                <li *ngFor="let item of analysis.branding_strategy?.portfolio_content_suggestions">
-                                    {{item}}</li>
+                                <li *ngFor="let p of analysis.career_strategy?.portfolio_ideas">{{p}}</li>
+                            </ul>
+                        </div>
+                        <div class="brand-section">
+                            <h4>📈 Growth Suggestions</h4>
+                            <ul class="clean-list">
+                                <li *ngFor="let g of analysis.career_strategy?.growth_suggestions">{{g}}</li>
                             </ul>
                         </div>
                     </div>
