@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{name}} ~ $ whoami</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="terminal-shell animate-fade-in">
+        <header class="terminal-header">
+            <div class="dots">
+                <span class="dot red"></span>
+                <span class="dot yellow"></span>
+                <span class="dot green"></span>
+            </div>
+            <div class="window-title">zsh — {{name}}@dev-hub — 80x24</div>
+        </header>
+        
+        <main class="terminal-body">
+            <div class="line"><span class="prompt">➜</span> <span class="cmd">whoami</span></div>
+            <div class="output">
+                <h1>{{name}}</h1>
+                <p>{{title}}</p>
+                <p class="summary">{{summary}}</p>
+            </div>
+
+            <div class="line"><span class="prompt">➜</span> <span class="cmd">ls experience/</span></div>
+            <ul class="output-list">
+                {{#each experience}}
+                <li>
+                    <strong>{{item.company}}</strong> - {{item.role}} 
+                    <span class="meta">[{{item.startDate}} - {{item.endDate}}]</span>
+                </li>
+                {{/each}}
+            </ul>
+
+            <div class="line"><span class="prompt">➜</span> <span class="cmd">cat skills.json</span></div>
+            <div class="output json-block">
+                <pre>
+{
+  "tech": [{{#each techSkills}}"{{item.name}}",{{/each}}],
+  "frameworks": [{{#each frameworks}}"{{item.name}}",{{/each}}]
+}
+                </pre>
+            </div>
+
+            <div class="line"><span class="prompt">➜</span> <span class="cmd">ls projects/</span></div>
+            <div class="projects-container">
+                {{#each projects}}
+                <div class="project-entry">
+                    <span class="filename">{{item.name}}.sh</span>
+                    <p class="comment"># {{item.techStack}}</p>
+                    <p>{{item.description}}</p>
+                </div>
+                {{/each}}
+            </div>
+
+            <div class="line blink-cursor"><span class="prompt">➜</span> <span class="cmd cursor-input"></span></div>
+        </main>
+    </div>
+
+    <div class="floating-contact">
+        <a href="mailto:{{email}}">Ping Me</a>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
